@@ -41,7 +41,8 @@ const transitionVariants = {
 
 export default function HeroSection() {
     return (
-        <>   <Header/>
+        <>   
+        <Header/>
             <main className="overflow-hidden">
              
                 <div
@@ -193,14 +194,15 @@ export default function HeroSection() {
                         </AnimatedGroup>
                     </div>
                 </section>
-                <LogoCloud/>
+              
+            </main>
+              <LogoCloud/>
                 <FeaturesSection/>
                 <Testimonials/>
                 <StatsSection/>
                 <Pricing/>
                 <CallToAction/>
                 <FAQsThree/>
-            </main>
             <Footer/>
         </>
     );
