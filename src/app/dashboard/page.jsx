@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import Link from 'next/link';
 import { 
   BellIcon, 
   BarChart2, 
@@ -199,7 +200,7 @@ const ActivityHeatmap = () => {
                   />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-sm">
+                  <p className="text-sm ">
                     {date.toLocaleDateString('en-US', { 
                       weekday: 'short', 
                       month: 'short', 
@@ -406,8 +407,8 @@ const CollapsibleSidebar = ({ email, username, onLogout }) => {
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                   } ${isCollapsed ? 'justify-center' : ''}`}
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                  <Link href={item.href}  ><item.icon className="h-4 w-4 flex-shrink-0" /></Link>
+                  {!isCollapsed && <Link href={item.href} className="flex-1"><span className="font-medium">{item.label}</span></Link>}
                   {!isCollapsed && item.active && (
                     <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
                   )}
@@ -417,7 +418,7 @@ const CollapsibleSidebar = ({ email, username, onLogout }) => {
               return isCollapsed ? (
                 <Tooltip key={index}>
                   <TooltipTrigger asChild>{MenuItem}</TooltipTrigger>
-                  <TooltipContent side="right" className="bg-zinc-800 border-zinc-700">
+                  <TooltipContent side="right" className="bg-zinc-800 dark:text-white border-zinc-700">
                     <p>{item.label}</p>
                   </TooltipContent>
                 </Tooltip>
