@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, Package2, CircleUser, Sun, Moon, Monitor } from "lucide-react";
+import { Menu,  CircleUser, Sun, Moon, Monitor } from "lucide-react";
 
 // Navigation links
 const navLinks = [
@@ -64,7 +64,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
         <Link href="/" className="mr-6 flex items-center gap-2 text-xl font-bold tracking-tight text-foreground transition-colors hover:text-primary">
-          <Package2 className="h-6 w-6" />
+           
           <span>ALCHPREP</span>
         </Link>
         <nav className="hidden flex-1 items-center justify-center md:flex">
@@ -154,7 +154,7 @@ const MobileSheet = ({ isLoggedIn, onLogout }) => (
     <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-xs">
       <div className="flex h-16 items-center justify-between border-b px-6">
         <Link href="/" className="flex items-center gap-2 font-bold">
-          <Package2 className="h-6 w-6 text-primary" />
+           
           <span>ALCHPREP</span>
         </Link>
       </div>
