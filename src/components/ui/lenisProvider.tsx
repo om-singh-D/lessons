@@ -1,32 +1,36 @@
 "use client"
 
-import React, { useEffect, useRef, ReactNode } from 'react'
-import Lenis from 'lenis'
+import React, { useEffect, useRef, ReactNode } from "react"
+import Lenis from "lenis"
 
 interface LenisProviderProps {
   children: ReactNode
 }
 
 const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
-  const lenisRef = useRef(null)
+  const lenisRef = useRef<Lenis | null>(null)
 
   useEffect(() => {
     // Initialize Lenis
-    lenisRef.current = new Lenis({
+    const lenis = new Lenis({
       duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     })
 
+    lenisRef.current = lenis
+
     // Animation loop
-    const raf = (time) => {
-      lenisRef.current?.raf(time)
-      requestAnimationFrame(raf)
+    let frameId: number
+    const raf = (time: number) => {
+      lenis.raf(time)
+      frameId = requestAnimationFrame(raf)
     }
-    requestAnimationFrame(raf)
+    frameId = requestAnimationFrame(raf)
 
     // Cleanup
     return () => {
-      lenisRef.current?.destroy()
+      cancelAnimationFrame(frameId)
+      lenis.destroy()
     }
   }, [])
 
