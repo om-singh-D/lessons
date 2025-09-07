@@ -308,6 +308,3 @@ export {
   ChartLegendContent,
   ChartStyle,
 }
-
-// ChartConfig type for TypeScript compatibility
-export const ChartConfig = {}

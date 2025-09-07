@@ -41,7 +41,8 @@ const transitionVariants = {
 
 export default function HeroSection() {
     return (
-        <>   <Header/>
+        <>   
+        <Header/>
             <main className="overflow-hidden">
              
                 <div
@@ -161,7 +162,7 @@ export default function HeroSection() {
                                         size="lg"
                                         variant="ghost"
                                         className="h-10.5 rounded-xl px-5">
-                                        <Link href="#link">
+                                        <Link href="/prepare">
                                             <span className="text-nowrap">Take a Mock Test</span>
                                         </Link>
                                     </Button>
@@ -193,14 +194,15 @@ export default function HeroSection() {
                         </AnimatedGroup>
                     </div>
                 </section>
-                <LogoCloud/>
+              
+            </main>
+              <LogoCloud/>
                 <FeaturesSection/>
                 <Testimonials/>
                 <StatsSection/>
                 <Pricing/>
                 <CallToAction/>
                 <FAQsThree/>
-            </main>
             <Footer/>
         </>
     );
