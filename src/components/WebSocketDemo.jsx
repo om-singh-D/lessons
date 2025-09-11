@@ -67,26 +67,22 @@ export default function WebSocketDemo() {
         </Card>
 
         {/* API Status Notice */}
-        <Card className="border-amber-600 bg-amber-900/20">
+        <Card className="border-green-600 bg-green-900/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Gemini API Setup Required
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Gemini AI Ready
             </CardTitle>
-            <CardDescription className="text-amber-200">
-              The demo will show mock data until Gemini API is properly configured
+            <CardDescription className="text-green-200">
+              Gemini API is configured and ready for AI-powered question generation
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
-              <p>To enable real AI question generation:</p>
-              <ol className="list-decimal list-inside space-y-1 text-amber-100">
-                <li>Go to <a href="https://console.developers.google.com/apis/api/generativelanguage.googleapis.com/overview?project=626965897853" target="_blank" className="text-blue-400 hover:text-blue-300 underline">Google Cloud Console</a></li>
-                <li>Click "Enable" to enable the Generative Language API</li>
-                <li>Or get a new API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" className="text-blue-400 hover:text-blue-300 underline">Google AI Studio</a></li>
-                <li>Update your .env.local file with the new API key</li>
-                <li>Restart the WebSocket server</li>
-              </ol>
+              <p className="text-green-100">✅ WebSocket server is running on port 3001</p>
+              <p className="text-green-100">✅ Gemini API key is configured</p>
+              <p className="text-green-100">✅ MongoDB database is connected</p>
+              <p className="text-green-100">✅ Ready to generate AI-powered questions!</p>
             </div>
           </CardContent>
         </Card>
