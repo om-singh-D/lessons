@@ -52,7 +52,7 @@ const App = () => {
 
   // Effect to check for user authentication on mount
   useEffect(() => {
-    const userEmail = localStorage.getItem('email') || "vermanickb75@gmail.com";
+    const userEmail = localStorage.getItem('email') || "omsingh@gmail.com";
     if (userEmail) {
       setUserId(userEmail);
       localStorage.setItem('email', userEmail);
@@ -267,7 +267,17 @@ const App = () => {
     setApiError(null);
     setShowRoadmapPrompt(false);
 
-    const prompt = `You are an expert AI tutor. Generate a comprehensive learning roadmap for a person with a goal in "${activeGoal}" at a "${selectedLevel}" level. The roadmap should be a Markdown-formatted list of simple, actionable points. Each point must be a single sentence and must not exceed 40 characters. Do not include any introductory or concluding text.`;
+    const prompt = `You are an expert AI tutor. Generate a comprehensive learning roadmap for a person with a goal in "${activeGoal}" at a "${selectedLevel}" level. 
+
+    Create a step-by-step roadmap with clear, actionable items. Each step should be concise and practical. Format your response as a numbered list where each item is a learning milestone or task.
+
+    Example format:
+    1. Learn the basics of [topic]
+    2. Practice with simple examples
+    3. Build your first project
+    4. Study advanced concepts
+    
+    Keep each point clear and actionable. Provide 8-12 steps total.`;
     
     const payload = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -283,15 +293,27 @@ const App = () => {
         body: JSON.stringify(payload)
       });
       const result = await response.json();
-      const generatedRoadmap = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const generatedRoadmapText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      // Convert the generated text into an array of roadmap items
+      const roadmapArray = generatedRoadmapText
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => line.replace(/^\d+\.\s*/, '').trim()) // Remove numbering
+        .filter(item => item.length > 0);
 
       const payloadToServer = {
         goalKeyword: activeGoal,
-        roadmap: generatedRoadmap,
+        roadmap: roadmapArray,
+        difficulty_level: difficulty,
+        xp: xp
       };
-      await saveGoalsToServer(payloadToServer);
-      showMessage('Roadmap generated and saved!');
-      fetchGoals(); // Re-fetch to update the UI
+      
+      const serverResponse = await saveGoalsToServer(payloadToServer);
+      if (serverResponse) {
+        showMessage('Roadmap generated and saved!');
+        fetchGoals(); // Re-fetch to update the UI
+      }
     } catch (error) {
       console.error("Roadmap generation failed:", error);
       setApiError('Failed to generate roadmap. Please try again.');
@@ -331,7 +353,9 @@ const App = () => {
     if (generatingRoadmap) return (
       <div className="flex items-center space-x-2"><Spinner /><span>Generating...</span></div>
     );
-    const roadmapExists = goals[activeGoal]?.roadmap && goals[activeGoal].roadmap.length > 0;
+    const roadmapExists = (goals[activeGoal]?.roadmap && 
+      ((Array.isArray(goals[activeGoal].roadmap) && goals[activeGoal].roadmap.length > 0) ||
+       (typeof goals[activeGoal].roadmap === 'string' && goals[activeGoal].roadmap.length > 0)));
     return roadmapExists ? 'Update Roadmap' : 'Generate Roadmap';
   };
 
@@ -437,8 +461,32 @@ const App = () => {
             
             {/* Conditional Sections */}
             {showRoadmapView ? (
-              /* Roadmap Section - Rendered as Markdown */
-              goals[activeGoal]?.roadmap && goals[activeGoal].roadmap.length > 0 ? (
+              /* Roadmap Section - Rendered as Array */
+              goals[activeGoal]?.roadmap && Array.isArray(goals[activeGoal].roadmap) && goals[activeGoal].roadmap.length > 0 ? (
+                <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
+                  <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                    Learning Roadmap
+                  </h3>
+                  <div className="space-y-4">
+                    {goals[activeGoal].roadmap.map((step, index) => (
+                      <div 
+                        key={index}
+                        className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 hover:border-green-500/50 transition-all duration-300"
+                      >
+                        <div className="flex items-start space-x-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            {index + 1}
+                          </div>
+                          <p className="text-zinc-300 font-light leading-relaxed flex-1">
+                            {step}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : goals[activeGoal]?.roadmap && typeof goals[activeGoal].roadmap === 'string' ? (
+                /* Fallback for legacy string format */
                 <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
                   <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
                     Learning Roadmap
@@ -581,7 +629,9 @@ const App = () => {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-2xl p-8 w-full max-w-lg space-y-6 animate-fade-in">
               <h3 className="text-2xl font-bold text-center bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
-                {goals[activeGoal]?.roadmap ? 'Update Existing Roadmap' : 'Generate New Roadmap'}
+                {((goals[activeGoal]?.roadmap && Array.isArray(goals[activeGoal].roadmap) && goals[activeGoal].roadmap.length > 0) ||
+                  (goals[activeGoal]?.roadmap && typeof goals[activeGoal].roadmap === 'string' && goals[activeGoal].roadmap.length > 0)) 
+                  ? 'Update Existing Roadmap' : 'Generate New Roadmap'}
               </h3>
               <p className="text-lg text-zinc-300 text-center font-light">Select your desired level for the roadmap:</p>
               <div className="grid grid-cols-2 gap-4">

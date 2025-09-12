@@ -44,7 +44,7 @@ const App = () => {
 
   // Effect to check for user authentication on mount
   useEffect(() => {
-    const userEmail = localStorage.getItem('email') || "vermanickb75@gmail.com";
+    const userEmail = localStorage.getItem('email') || "omsingh@gmail.com";
     if (userEmail) {
       setUserId(userEmail);
       localStorage.setItem('email', userEmail);
