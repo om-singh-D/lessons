@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import Footer from '@/components/Footer';
 import LenisProvider from '@/components/ui/lenisProvider';
+import { Calendar, Target, Zap, CheckCircle, Clock, Filter, Plus, BookOpen, Trophy, TrendingUp } from 'lucide-react';
 
 // Base URLs
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
@@ -469,6 +470,37 @@ const App = () => {
         )}
         
         <Footer/>
+        
+        <style jsx>{`
+          @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+          }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
+          }
+          @keyframes fade-in-out {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+          .animate-fade-in-out {
+            animation: fade-in-out 3s ease-in-out;
+          }
+        `}</style>
       </div>
     </LenisProvider>
   );
