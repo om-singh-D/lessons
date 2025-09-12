@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "AlchPrep Authentication API",
+    "description": "Complete authentication system testing for AlchPrep",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Signup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser{{$randomInt}}\",\n  \"email\": \"testuser{{$randomInt}}@example.com\",\n  \"firstName\": \"John\",\n  \"age\": 25,\n  \"profession\": \"Developer\",\n  \"primaryGoal\": \"Learn new skills\",\n  \"password\": \"TestPass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/signup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "signup"]
+        },
+        "description": "Creates a new user account with profile data and vector embedding"
+      },
+      "response": []
+    },
+    {
+      "name": "Login with Email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"testuser123@example.com\",\n  \"password\": \"TestPass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "login"]
+        },
+        "description": "Login using email address as identifier"
+      },
+      "response": []
+    },
+    {
+      "name": "Login with Username",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"identifier\": \"testuser123\",\n  \"password\": \"TestPass123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/auth/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "login"]
+        },
+        "description": "Login using username as identifier"
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Profile (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/auth/profile",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "profile"]
+        },
+        "description": "Get user profile data - requires authentication cookie"
+      },
+      "response": []
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/auth/logout",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "logout"]
+        },
+        "description": "Logout user and clear authentication cookie"
+      },
+      "response": []
+    },
+    {
+      "name": "Token Verification",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/auth/verify",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "auth", "verify"]
+        },
+        "description": "Verify if user token is valid"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}

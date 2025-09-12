@@ -30,10 +30,17 @@ const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  // New signup fields
+  const [firstName, setFirstName] = useState("");
+  const [age, setAge] = useState("");
+  const [profession, setProfession] = useState("");
+  const [primaryGoal, setPrimaryGoal] = useState("");
+  
   const [isLogin, setIsLogin] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecklistVisible, setIsChecklistVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [passwordCriteria, setPasswordCriteria] = useState({
     length: false,
     uppercase: false,
@@ -45,6 +52,10 @@ const Login = () => {
     return (
       username.trim() &&
       identifier.trim() &&
+      firstName.trim() &&
+      age.trim() &&
+      profession.trim() &&
+      primaryGoal.trim() &&
       password.trim() &&
       Object.values(passwordCriteria).every(Boolean)
     );
@@ -61,7 +72,7 @@ const Login = () => {
 
   useEffect(() => {
     setPasswordCriteria({
-      length: password.length >= 6,
+      length: password.length >= 8, // Changed from 6 to 8
       uppercase: /[A-Z]/.test(password),
       specialChar: /[!@#$%^&*]/.test(password),
     });
@@ -70,52 +81,67 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
+    setIsLoading(true);
+    
     if (!isLogin && !Object.values(passwordCriteria).every(Boolean)) {
       setErrorMsg("Password must meet all the criteria.");
+      setIsLoading(false);
       return;
     }
 
     const endpoint = isLogin
-      ? "https://auth-universal-repo.vercel.app/api/auth/login"
-      : "https://auth-universal-repo.vercel.app/api/auth/signup";
+      ? "/api/auth/login"
+      : "/api/auth/signup";
 
     const payload = isLogin
       ? { identifier: identifier.toLowerCase(), password }
-      : { username, email: identifier.toLowerCase(), password };
+      : { 
+          username, 
+          email: identifier.toLowerCase(), 
+          firstName,
+          age: parseInt(age),
+          profession,
+          primaryGoal,
+          password 
+        };
 
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include cookies for JWT
         body: JSON.stringify(payload),
       });
       const data = await res.json();
 
       if (!res.ok) {
         setErrorMsg(
-          data?.error || data?.message || data.errors?.[0]?.msg || "Error"
+          data?.error || data?.message || data.errors?.[0]?.msg || "Error occurred"
         );
+        setIsLoading(false);
         return;
       }
 
       if (isLogin) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("email", data.email);
+        // For login, the JWT is set as httpOnly cookie automatically
+        localStorage.setItem("username", data.user?.username || "");
+        localStorage.setItem("email", data.user?.email || "");
         toast.success("Login successful!", { position: "top-center" });
         setTimeout(() => router.push("/dashboard"), 1500);
       } else {
-        toast.success("Signup successful! You can now login.", {
+        // For signup, the JWT is also set as httpOnly cookie automatically
+        localStorage.setItem("username", data.user?.username || "");
+        localStorage.setItem("email", data.user?.email || "");
+        toast.success("Signup successful! Redirecting to dashboard...", {
           position: "top-center",
         });
-        setIsLogin(true);
-        setIdentifier("");
-        setPassword("");
-        setUsername("");
-        localStorage.setItem("email", identifier);
+        setTimeout(() => router.push("/dashboard"), 1500);
       }
-    } catch {
+    } catch (error) {
+      console.error("Auth error:", error);
       setErrorMsg("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -142,22 +168,89 @@ const Login = () => {
           </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div>
-                <label className="text-sm text-gray-500 dark:text-gray-400">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) =>
-                    /^[a-zA-Z0-9_]*$/.test(e.target.value) &&
-                    setUsername(e.target.value)
-                  }
-                  required
-                  placeholder="john_doe"
-                  className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="text-sm text-gray-500 dark:text-gray-400">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) =>
+                      /^[a-zA-Z0-9_]*$/.test(e.target.value) &&
+                      setUsername(e.target.value)
+                    }
+                    required
+                    placeholder="john_doe"
+                    className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 dark:text-gray-400">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    placeholder="John"
+                    className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 dark:text-gray-400">
+                    Age
+                  </label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    required
+                    min="13"
+                    max="120"
+                    placeholder="25"
+                    className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 dark:text-gray-400">
+                    Profession
+                  </label>
+                  <select
+                    value={profession}
+                    onChange={(e) => setProfession(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
+                  >
+                    <option value="">Select your profession</option>
+                    <option value="Student">Student</option>
+                    <option value="Developer">Developer</option>
+                    <option value="Teacher">Teacher</option>
+                    <option value="Engineer">Engineer</option>
+                    <option value="Designer">Designer</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 dark:text-gray-400">
+                    Primary Goal
+                  </label>
+                  <select
+                    value={primaryGoal}
+                    onChange={(e) => setPrimaryGoal(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg focus:outline-none focus:ring"
+                  >
+                    <option value="">Select your primary goal</option>
+                    <option value="Learn new skills">Learn new skills</option>
+                    <option value="Career advancement">Career advancement</option>
+                    <option value="Exam preparation">Exam preparation</option>
+                    <option value="Personal growth">Personal growth</option>
+                  </select>
+                </div>
+              </>
             )}
             <div>
               <label className="text-sm text-gray-500 dark:text-gray-400">
@@ -209,7 +302,7 @@ const Login = () => {
                   <ul className="space-y-2">
                     <PasswordCriteriaItem
                       isMet={passwordCriteria.length}
-                      text="At least 6 characters"
+                      text="At least 8 characters"
                     />
                     <PasswordCriteriaItem
                       isMet={passwordCriteria.uppercase}
@@ -226,10 +319,17 @@ const Login = () => {
             {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
             <button
               type="submit"
-              disabled={!isFormValid()}
-              className="w-full bg-black dark:bg-white dark:text-black text-white font-semibold py-2 rounded-lg transition disabled:opacity-50"
+              disabled={!isFormValid() || isLoading}
+              className="w-full bg-black dark:bg-white dark:text-black text-white font-semibold py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? "Sign In" : "Sign Up"}
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                  <span className="ml-2">{isLogin ? "Signing In..." : "Signing Up..."}</span>
+                </div>
+              ) : (
+                isLogin ? "Sign In" : "Sign Up"
+              )}
             </button>
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               {isLogin
@@ -238,7 +338,18 @@ const Login = () => {
               <button
                 type="button"
                 className="text-blue-700 dark:text-blue-400 underline"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  // Clear all form fields when switching
+                  setIdentifier("");
+                  setPassword("");
+                  setUsername("");
+                  setFirstName("");
+                  setAge("");
+                  setProfession("");
+                  setPrimaryGoal("");
+                  setErrorMsg("");
+                }}
               >
                 {isLogin ? "Sign up" : "Log in"}
               </button>

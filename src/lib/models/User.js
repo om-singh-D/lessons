@@ -272,6 +272,17 @@ const UserSchema = new mongoose.Schema({
   lastName: {
     type: String
   },
+  age: {
+    type: Number,
+    min: 13,
+    max: 120
+  },
+  profession: {
+    type: String
+  },
+  primaryGoal: {
+    type: String
+  },
   avatar: {
     type: String
   },
@@ -423,11 +434,11 @@ const UserSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  last_login_time: {
+  lastLoginTime: {  // Changed from last_login_time to lastLoginTime
     type: Date,
     default: Date.now
   },
-  last_date_login: {
+  lastDateLogin: {  // Changed from last_date_login to lastDateLogin
     type: String,
     default: () => new Date().toISOString().split('T')[0]
   },
@@ -443,11 +454,11 @@ const UserSchema = new mongoose.Schema({
   },
   
   // Timestamps
-  created_at: {
+  createdAt: {  // Changed from created_at to createdAt
     type: Date,
     default: Date.now
   },
-  updated_at: {
+  updatedAt: {  // Changed from updated_at to updatedAt
     type: Date,
     default: Date.now
   }
@@ -471,7 +482,7 @@ UserSchema.index({ 'lessons.createdAt': -1 });
 
 // Pre-save middleware to update timestamps
 UserSchema.pre('save', function(next) {
-  this.updated_at = new Date();
+  this.updatedAt = new Date();  // Changed from updated_at to updatedAt
   if (this.isModified('lessons')) {
     const lesson = this.lessons[this.lessons.length - 1];
     if (lesson && lesson.isNew) {
