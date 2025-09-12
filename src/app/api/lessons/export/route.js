@@ -1,36 +1,12 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
 import jwt from 'jsonwebtoken';
-
-// Helper function to verify JWT token
-function verifyToken(token) {
-  try {
-    if (!token || !token.startsWith('Bearer ')) {
-      throw new Error('Invalid token format');
-    }
-    
-    const actualToken = token.substring(7); // Remove 'Bearer ' prefix
-    const decoded = jwt.verify(actualToken, process.env.JWT_SECRET || 'your-secret-key');
-    return decoded;
-  } catch (error) {
-    throw new Error('Invalid or expired token');
-  }
-}
+import mongoose from 'mongoose';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 // Helper function to get user from token
 async function getUserFromToken(request) {
-  const token = request.headers.get('Authorization');
-  const decoded = verifyToken(token);
-  
-  await connectDB();
-  const user = await User.findById(decoded.userId);
-  
-  if (!user) {
-    throw new Error('User not found');
-  }
-  
-  return user;
+  return await getAuthenticatedUser(request);
 }
 
 // Generate PDF content (text representation for now)

@@ -56,23 +56,24 @@ import {
 } from 'recharts';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:3000'; // Fixed port from 3001 to 3000
 
 // API service
 const apiService = {
   async makeRequest(endpoint, options = {}) {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
-    if (!token && endpoint !== '/auth/login') {
-      throw new Error('No authentication token found');
-    }
-    
     const defaultOptions = {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      },
+      credentials: 'include', // Include cookies for httpOnly JWT
     };
+
+    // Add Authorization header if token exists in localStorage
+    if (token) {
+      defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
 
     const config = { ...defaultOptions, ...options };
     
@@ -81,7 +82,7 @@ const apiService = {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        throw new Error(data.message || data.error || 'API request failed');
       }
       
       return data;
@@ -92,21 +93,17 @@ const apiService = {
   },
 
   async getUserProfile() {
-    const response = await this.makeRequest('/api/user/profile');
+    const response = await this.makeRequest('/api/auth/profile'); // Fixed endpoint
     console.log('API Response - User Profile:', response);
     return response;
   },
 
   async verifyToken() {
-    return this.makeRequest('/auth/verify-token');
-  },
-
-  async getActiveSessions() {
-    return this.makeRequest('/auth/active-sessions');
+    return this.makeRequest('/api/auth/verify'); // Fixed endpoint
   },
 
   async logout() {
-    return this.makeRequest('/auth/logout', { method: 'POST' });
+    return this.makeRequest('/api/auth/logout', { method: 'POST' }); // Fixed endpoint
   }
 };
 

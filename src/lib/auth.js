@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import connectDB from "@/lib/mongodb";
-import User from "@/lib/models/User";
+import mongoose from "mongoose";
 
 /**
  * Verify JWT token from cookie or Authorization header
@@ -48,6 +48,22 @@ export function getTokenFromRequest(request) {
 export async function getAuthenticatedUser(request) {
   try {
     await connectDB();
+    
+    // Get User model - ensure it's properly imported after DB connection
+    let User;
+    try {
+      User = mongoose.models.User || mongoose.model('User', (await import("@/lib/models/User")).UserSchema);
+    } catch (modelError) {
+      // Fallback - direct import
+      const userModule = await import("@/lib/models/User");
+      User = userModule.default;
+    }
+    
+    // Verify User model has required methods
+    if (!User || typeof User.findById !== 'function') {
+      console.error('User model not properly loaded:', User);
+      throw new Error('User model not available');
+    }
     
     const token = getTokenFromRequest(request);
     if (!token) {

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 // Helper function to create vector embedding from user profile
 function createUserVectorEmbedding(userProfile) {
@@ -45,6 +45,22 @@ function createUserVectorEmbedding(userProfile) {
 export async function POST(request) {
   try {
     await connectDB();
+    
+    // Get User model - ensure it's properly imported after DB connection
+    let User;
+    try {
+      User = mongoose.models.User || mongoose.model('User', (await import("@/lib/models/User")).UserSchema);
+    } catch (modelError) {
+      // Fallback - direct import
+      const userModule = await import("@/lib/models/User");
+      User = userModule.default;
+    }
+    
+    // Verify User model has required methods
+    if (!User || typeof User.findOne !== 'function') {
+      console.error('User model not properly loaded:', User);
+      throw new Error('User model not available');
+    }
     
     const reqBody = await request.json();
     const { username, email, firstName, age, profession, primaryGoal, password } = reqBody;
@@ -148,6 +164,7 @@ export async function POST(request) {
     const response = NextResponse.json({
       message: "User created successfully",
       success: true,
+      token: token, // Include token in response body
       user: {
         id: newUser._id,
         username: newUser.username,

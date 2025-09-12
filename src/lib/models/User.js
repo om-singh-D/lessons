@@ -583,6 +583,18 @@ UserSchema.methods.getLessons = function(criteria = {}) {
   return lessons.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 };
 
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
+let User;
+
+try {
+  // Try to get existing model first
+  User = mongoose.models.User;
+} catch (error) {
+  // Model doesn't exist yet
+}
+
+if (!User) {
+  User = mongoose.model('User', UserSchema);
+}
 
 export default User;
+export { UserSchema };

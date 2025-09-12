@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 export async function POST(request) {
   try {
     await connectDB();
+    
+    // Get User model - ensure it's properly imported after DB connection
+    let User;
+    try {
+      User = mongoose.models.User || mongoose.model('User', (await import("@/lib/models/User")).UserSchema);
+    } catch (modelError) {
+      // Fallback - direct import
+      const userModule = await import("@/lib/models/User");
+      User = userModule.default;
+    }
+    
+    // Verify User model has required methods
+    if (!User || typeof User.findOne !== 'function') {
+      console.error('User model not properly loaded:', User);
+      throw new Error('User model not available');
+    }
     
     const reqBody = await request.json();
     const { identifier, password } = reqBody; // identifier can be email or username
@@ -49,9 +65,9 @@ export async function POST(request) {
     }
 
     // Update last login information
-    user.last_login_time = new Date();
-    user.last_date_login = new Date().toISOString().split('T')[0];
-    user.updated_at = new Date();
+    user.lastLoginTime = new Date(); // Changed from last_login_time
+    user.lastDateLogin = new Date().toISOString().split('T')[0]; // Changed from last_date_login
+    user.updatedAt = new Date(); // Changed from updated_at
     
     // Add to login history if the field exists
     if (user.login_history) {
@@ -88,6 +104,7 @@ export async function POST(request) {
     const response = NextResponse.json({
       message: "Login successful",
       success: true,
+      token: token, // Include token in response body
       user: {
         id: user._id,
         username: user.username,
@@ -96,7 +113,7 @@ export async function POST(request) {
         age: user.age,
         profession: user.profession,
         primaryGoal: user.primaryGoal,
-        lastLogin: user.last_login_time
+        lastLogin: user.lastLoginTime // Changed from last_login_time
       }
     });
 

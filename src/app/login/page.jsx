@@ -47,6 +47,19 @@ const Login = () => {
     specialChar: false,
   });
 
+  // Helper function to clear user data from localStorage
+  const clearUserData = () => {
+    localStorage.removeItem("token"); // Clear JWT token
+    localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    localStorage.removeItem("firstName");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("profession");
+    localStorage.removeItem("primaryGoal");
+    localStorage.removeItem("isAuthenticated");
+    console.log("🧹 User data and token cleared from localStorage");
+  };
+
   const isFormValid = () => {
     if (isLogin) return identifier.trim() && password.trim();
     return (
@@ -123,15 +136,45 @@ const Login = () => {
       }
 
       if (isLogin) {
-        // For login, the JWT is set as httpOnly cookie automatically
+        // For login, store JWT token and user info in localStorage
+        localStorage.setItem("token", data.token || ""); // Store JWT token
         localStorage.setItem("username", data.user?.username || "");
         localStorage.setItem("email", data.user?.email || "");
+        localStorage.setItem("firstName", data.user?.firstName || "");
+        localStorage.setItem("userId", data.user?.id || "");
+        localStorage.setItem("isAuthenticated", "true");
+        
+        console.log("✅ Login data stored in localStorage:", {
+          token: data.token ? "JWT token stored" : "No token",
+          username: data.user?.username,
+          email: data.user?.email,
+          firstName: data.user?.firstName,
+          userId: data.user?.id
+        });
+        
         toast.success("Login successful!", { position: "top-center" });
         setTimeout(() => router.push("/dashboard"), 1500);
       } else {
-        // For signup, the JWT is also set as httpOnly cookie automatically
+        // For signup, store JWT token and user info in localStorage
+        localStorage.setItem("token", data.token || ""); // Store JWT token
         localStorage.setItem("username", data.user?.username || "");
         localStorage.setItem("email", data.user?.email || "");
+        localStorage.setItem("firstName", data.user?.firstName || "");
+        localStorage.setItem("userId", data.user?.id || "");
+        localStorage.setItem("profession", data.user?.profession || "");
+        localStorage.setItem("primaryGoal", data.user?.primaryGoal || "");
+        localStorage.setItem("isAuthenticated", "true");
+        
+        console.log("✅ Signup data stored in localStorage:", {
+          token: data.token ? "JWT token stored" : "No token",
+          username: data.user?.username,
+          email: data.user?.email,
+          firstName: data.user?.firstName,
+          userId: data.user?.id,
+          profession: data.user?.profession,
+          primaryGoal: data.user?.primaryGoal
+        });
+        
         toast.success("Signup successful! Redirecting to dashboard...", {
           position: "top-center",
         });
