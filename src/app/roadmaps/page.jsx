@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { Header } from '@/components/header';
+import Footer from '@/components/Footer';
+import LenisProvider from '@/components/ui/lenisProvider';
 
 // Base URLs
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
@@ -339,213 +342,289 @@ const App = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-8 md:p-12 flex flex-col items-center">
-      <div className="w-full max-w-3xl font-sans space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-center justify-between pb-6 border-b border-gray-800">
-          <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 mb-4 md:mb-0">
-            Daily Goal Tracker
-          </h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Logout
-          </button>
-        </div>
+    <LenisProvider>
+      <div className="min-h-screen bg-zinc-950 text-white font-sans">
+        <Header/>
         
-        {/* Status Message */}
-        {apiError && <div className="bg-red-700 text-white p-4 rounded-lg text-center font-medium shadow-lg animate-fade-in">{apiError}</div>}
-        {message && <div className="bg-green-600 text-white p-4 rounded-lg text-center font-medium shadow-lg animate-fade-in-out">{message}</div>}
-
-        {/* Goal Stats and Task Generation */}
-        <div className="flex flex-col md:flex-row justify-between items-center bg-gray-900 p-6 rounded-xl shadow-2xl border border-gray-800">
-          <div className="flex-1 space-y-2 mb-4 md:mb-0">
-            <h2 className="text-2xl font-bold text-gray-200">Goal: {activeGoal}</h2>
-            <p className="text-md text-gray-400">Current XP: <span className="text-indigo-400 font-bold">{xp}</span></p>
-            <p className="text-md text-gray-400">Difficulty: <span className="text-indigo-400 font-bold">{difficulty}</span>{difficulty === 1000 && " (Professional)"}</p>
-          </div>
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <button
-              onClick={handleRoadmapClick}
-              disabled={generatingRoadmap}
-              className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform ${
-                generatingRoadmap ? 'bg-gray-700 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 hover:scale-105 shadow-md'
-              }`}
-            >
-              {getButtonText()}
-            </button>
-            <button
-              onClick={() => generateDailyTasks()}
-              disabled={generating}
-              className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform ${
-                generating ? 'bg-gray-700 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:scale-105 shadow-md'
-              }`}
-            >
-              {generating ? (
-                <div className="flex items-center space-x-2"><Spinner /><span>Generating...</span></div>
-              ) : (
-                'Generate New Tasks'
-              )}
-            </button>
-          </div>
+        {/* Background gradient effect */}
+        <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
+          <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+          <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         </div>
 
-        {/* View Toggle */}
-        <div className="flex justify-center">
-            <button
-                onClick={() => setShowRoadmapView(!showRoadmapView)}
-                className="px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform bg-purple-600 hover:bg-purple-700 hover:scale-105 shadow-md"
-            >
-                {showRoadmapView ? 'Show Daily Tasks' : 'Show Roadmap'}
-            </button>
-        </div>
-        
-        {/* Conditional Sections */}
-        {showRoadmapView ? (
-          /* Roadmap Section - Rendered as Markdown */
-          goals[activeGoal]?.roadmap && goals[activeGoal].roadmap.length > 0 && (
-            <div className="bg-gray-900 rounded-xl p-6 shadow-2xl border border-gray-800">
-              <h3 className="text-xl font-bold text-gray-200 mb-4">Learning Roadmap</h3>
-              <div className="prose prose-invert max-w-none mt-4">
-                <pre className="p-4 rounded-lg bg-gray-800 text-gray-300 overflow-x-auto whitespace-pre-wrap">{goals[activeGoal].roadmap}</pre>
+        <div className="relative z-10 px-4 sm:px-6 lg:px-8 py-8">
+          <div className="w-full max-w-7xl mx-auto font-sans space-y-8">
+            {/* Hero Section */}
+            <section className="text-center py-12">
+              <h1 className="text-4xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-blue-300 via-white to-purple-300 bg-clip-text text-transparent leading-tight">
+                Learning Roadmap & Goals
+              </h1>
+              <p className="text-lg md:text-xl text-zinc-300 mb-8 max-w-3xl mx-auto font-light">
+                Create personalized learning roadmaps and track your daily progress with adaptive tasks.
+              </p>
+            </section>
+            
+            {/* Status Message */}
+            {apiError && (
+              <div className="bg-red-800/20 text-red-300 border border-red-700/50 p-4 rounded-xl text-center font-medium shadow-lg animate-fade-in backdrop-blur-md">
+                {apiError}
+              </div>
+            )}
+            {message && (
+              <div className="bg-green-800/20 text-green-300 border border-green-700/50 p-4 rounded-xl text-center font-medium shadow-lg animate-fade-in-out backdrop-blur-md">
+                {message}
+              </div>
+            )}
+
+            {/* Goal Stats and Controls */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg p-6 hover:shadow-2xl transition-all duration-300">
+              <div className="flex flex-col lg:flex-row justify-between items-center">
+                <div className="flex-1 space-y-3 mb-6 lg:mb-0">
+                  <h2 className="text-3xl font-bold text-white">Goal: {activeGoal}</h2>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <p className="text-lg text-zinc-300">
+                      Current XP: <span className="text-blue-400 font-bold">{xp}</span>
+                    </p>
+                    <p className="text-lg text-zinc-300">
+                      Difficulty: <span className="text-purple-400 font-bold">{difficulty}</span>
+                      {difficulty === 1000 && <span className="ml-2 px-2 py-1 bg-yellow-800/20 text-yellow-300 border border-yellow-700/50 rounded-full text-sm">Professional</span>}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={handleRoadmapClick}
+                    disabled={generatingRoadmap}
+                    className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform ${
+                      generatingRoadmap 
+                        ? 'bg-white/10 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 hover:scale-105 shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {getButtonText()}
+                  </button>
+                  <button
+                    onClick={() => generateDailyTasks()}
+                    disabled={generating}
+                    className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform ${
+                      generating 
+                        ? 'bg-white/10 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 hover:scale-105 shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {generating ? (
+                      <div className="flex items-center space-x-2">
+                        <Spinner />
+                        <span>Generating...</span>
+                      </div>
+                    ) : (
+                      'Generate New Tasks'
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          )
-        ) : (
-          /* Tasks List */
-          loading ? (
-            <div className="text-center py-10 text-gray-500 font-light">Loading goals...</div>
-          ) : (
-            <div className="space-y-6">
-              {goals && goals[activeGoal] && goals[activeGoal].daily_tasks && Object.keys(goals[activeGoal].daily_tasks).length > 0 ? (
-                Object.keys(goals[activeGoal].daily_tasks).sort((a,b) => b.localeCompare(a)).map(date => (
-                  <div key={date} className="bg-gray-900 rounded-xl p-6 shadow-2xl border border-gray-800">
-                    <button
-                      className="w-full flex justify-between items-center text-left"
-                      onClick={() => toggleExpand(date)}
-                    >
-                      <h3 className="text-xl font-bold text-gray-200">Tasks for {date}</h3>
-                      <svg
-                        className={`w-6 h-6 transform transition-transform duration-300 text-gray-500 ${expandedDates[date] ? 'rotate-180' : ''}`}
-                        fill="currentColor" viewBox="0 0 20 20"
-                      >
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    <div className={`transition-all duration-500 ease-in-out ${expandedDates[date] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
-                      <div className="mt-4 border-t border-gray-800 pt-4 space-y-4">
-                        {Object.keys(goals[activeGoal].daily_tasks[date]).map(taskId => {
-                          const task = goals[activeGoal].daily_tasks[date][taskId];
-                          return (
-                            <div
-                              key={taskId}
-                              className={`bg-gray-800 p-4 rounded-lg flex flex-col items-start space-y-2 border border-gray-700 transition-all duration-200 ${task.completed ? 'opacity-50' : 'hover:border-indigo-600 cursor-pointer'}`}
-                              onClick={() => handleTaskClick(task, date, taskId)}
-                            >
-                              <h4 className={`text-lg font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>{task.question}</h4>
-                              {task.completed && (
-                                <p className={`mt-1 text-sm text-gray-400`}>Correct Answer: {task.answer}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+
+            {/* View Toggle */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowRoadmapView(!showRoadmapView)}
+                className="px-8 py-4 rounded-xl font-semibold text-white transition-all duration-300 transform bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 hover:scale-105 shadow-lg hover:shadow-xl backdrop-blur-md"
+              >
+                {showRoadmapView ? 'Show Daily Tasks' : 'Show Roadmap'}
+              </button>
+            </div>
+            
+            {/* Conditional Sections */}
+            {showRoadmapView ? (
+              /* Roadmap Section - Rendered as Markdown */
+              goals[activeGoal]?.roadmap && goals[activeGoal].roadmap.length > 0 ? (
+                <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300 p-6">
+                  <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                    Learning Roadmap
+                  </h3>
+                  <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
+                    <pre className="text-zinc-300 overflow-x-auto whitespace-pre-wrap font-light leading-relaxed">
+                      {goals[activeGoal].roadmap}
+                    </pre>
                   </div>
-                ))
-              ) : (
-                <div className="text-center text-gray-500 py-10 font-light">
-                  <p>No tasks found for the goal "{activeGoal}".</p>
-                  <p>Tasks will be automatically generated for you.</p>
                 </div>
-              )}
-            </div>
-          )
-        )}
-      </div>
-      
-      {/* Modal for Answer Input */}
-      {showAnswerPrompt && currentTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-xl p-8 shadow-2xl w-full max-w-lg space-y-6 animate-fade-in">
-            <h3 className="text-2xl font-bold text-white text-center">Answer the task</h3>
-            <p className="text-lg text-gray-300 text-center">{currentTask.question}</p>
-            <input
-              type="text"
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') judgeAnswer(currentTask, currentTask.date, currentTask.taskId);
-              }}
-              className="w-full p-3 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              placeholder="Type your answer here..."
-            />
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowAnswerPrompt(false)}
-                className="px-6 py-3 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => judgeAnswer(currentTask, currentTask.date, currentTask.taskId)}
-                disabled={generating || userAnswer.trim() === ''}
-                className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
-                  generating || userAnswer.trim() === '' ? 'bg-indigo-700 opacity-50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                {generating ? <Spinner /> : 'Submit Answer'}
-              </button>
-            </div>
+              ) : (
+                <div className="text-center py-16 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10">
+                  <div className="w-16 h-16 bg-white/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-300 mb-2">No roadmap available</h3>
+                  <p className="text-zinc-400 font-light">Generate a roadmap to get started with your learning journey</p>
+                </div>
+              )
+            ) : (
+              /* Tasks List */
+              loading ? (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 bg-white/10 rounded-full mx-auto mb-4 animate-pulse"></div>
+                  <p className="text-zinc-400 font-light text-lg">Loading your daily tasks...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {goals && goals[activeGoal] && goals[activeGoal].daily_tasks && Object.keys(goals[activeGoal].daily_tasks).length > 0 ? (
+                    Object.keys(goals[activeGoal].daily_tasks).sort((a,b) => b.localeCompare(a)).map(date => (
+                      <div key={date} className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg hover:shadow-2xl transition-all duration-300">
+                        <button
+                          className="w-full flex justify-between items-center text-left p-6"
+                          onClick={() => toggleExpand(date)}
+                        >
+                          <h3 className="text-2xl font-bold text-white">Tasks for {date}</h3>
+                          <svg
+                            className={`w-6 h-6 transform transition-transform duration-300 text-zinc-400 ${expandedDates[date] ? 'rotate-180' : ''}`}
+                            fill="currentColor" viewBox="0 0 20 20"
+                          >
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        <div className={`transition-all duration-500 ease-in-out ${expandedDates[date] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+                          <div className="px-6 pb-6 border-t border-white/10 pt-6 space-y-4">
+                            {Object.keys(goals[activeGoal].daily_tasks[date]).map(taskId => {
+                              const task = goals[activeGoal].daily_tasks[date][taskId];
+                              return (
+                                <div
+                                  key={taskId}
+                                  className={`bg-white/5 backdrop-blur-md p-4 rounded-xl flex flex-col items-start space-y-3 border border-white/10 transition-all duration-300 ${
+                                    task.completed 
+                                      ? 'opacity-60' 
+                                      : 'hover:border-blue-500/50 hover:bg-white/10 cursor-pointer transform hover:scale-[1.02]'
+                                  }`}
+                                  onClick={() => handleTaskClick(task, date, taskId)}
+                                >
+                                  <h4 className={`text-lg font-medium ${task.completed ? 'line-through text-zinc-500' : 'text-white'}`}>
+                                    {task.question}
+                                  </h4>
+                                  {task.completed && (
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                      </div>
+                                      <p className="text-sm text-zinc-400">Correct Answer: {task.answer}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-16 bg-white/5 backdrop-blur-lg rounded-xl border border-white/10">
+                      <div className="w-16 h-16 bg-white/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-semibold text-zinc-300 mb-2">No tasks found</h3>
+                      <p className="text-zinc-400 font-light">Tasks will be automatically generated for "{activeGoal}"</p>
+                    </div>
+                  )}
+                </div>
+              )
+            )}
           </div>
         </div>
-      )}
-
-      {/* Modal for Roadmap Generation */}
-      {showRoadmapPrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 rounded-xl p-8 shadow-2xl w-full max-w-lg space-y-6 animate-fade-in">
-            <h3 className="text-2xl font-bold text-white text-center">
-              {goals[activeGoal]?.roadmap ? 'Update Existing Roadmap' : 'Generate New Roadmap'}
-            </h3>
-            <p className="text-lg text-gray-300 text-center">Select your desired level for the roadmap:</p>
-            <div className="grid grid-cols-2 gap-4">
-              {levels.map(level => (
+        
+        {/* Modal for Answer Input */}
+        {showAnswerPrompt && currentTask && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-2xl p-8 w-full max-w-lg space-y-6 animate-fade-in">
+              <h3 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
+                Answer the Task
+              </h3>
+              <p className="text-lg text-zinc-300 text-center font-light">{currentTask.question}</p>
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') judgeAnswer(currentTask, currentTask.date, currentTask.taskId);
+                }}
+                className="w-full p-4 rounded-xl bg-white/5 text-white border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-md transition-all duration-300"
+                placeholder="Type your answer here..."
+              />
+              <div className="flex justify-end space-x-4">
                 <button
-                  key={level}
-                  onClick={() => setSelectedLevel(level)}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    selectedLevel === level
-                      ? 'bg-indigo-600 text-white shadow-lg'
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  onClick={() => setShowAnswerPrompt(false)}
+                  className="px-6 py-3 rounded-xl font-semibold text-zinc-300 bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => judgeAnswer(currentTask, currentTask.date, currentTask.taskId)}
+                  disabled={generating || userAnswer.trim() === ''}
+                  className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 ${
+                    generating || userAnswer.trim() === '' 
+                      ? 'bg-white/10 opacity-50 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-lg'
                   }`}
                 >
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                  {generating ? <Spinner /> : 'Submit Answer'}
                 </button>
-              ))}
-            </div>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setShowRoadmapPrompt(false)}
-                className="px-6 py-3 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={generateRoadmap}
-                disabled={generatingRoadmap}
-                className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 ${
-                  generatingRoadmap ? 'bg-indigo-700 opacity-50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
-              >
-                {getButtonText()}
-              </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* Modal for Roadmap Generation */}
+        {showRoadmapPrompt && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-2xl p-8 w-full max-w-lg space-y-6 animate-fade-in">
+              <h3 className="text-2xl font-bold text-center bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                {goals[activeGoal]?.roadmap ? 'Update Existing Roadmap' : 'Generate New Roadmap'}
+              </h3>
+              <p className="text-lg text-zinc-300 text-center font-light">Select your desired level for the roadmap:</p>
+              <div className="grid grid-cols-2 gap-4">
+                {levels.map(level => (
+                  <button
+                    key={level}
+                    onClick={() => setSelectedLevel(level)}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                      selectedLevel === level
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-105'
+                        : 'bg-white/10 text-zinc-300 hover:bg-white/20 backdrop-blur-md'
+                    }`}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowRoadmapPrompt(false)}
+                  className="px-6 py-3 rounded-xl font-semibold text-zinc-300 bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={generateRoadmap}
+                  disabled={generatingRoadmap}
+                  className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 ${
+                    generatingRoadmap 
+                      ? 'bg-white/10 opacity-50 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-lg'
+                  }`}
+                >
+                  {getButtonText()}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <Footer/>
+      </div>
+    </LenisProvider>
   );
 };
 
