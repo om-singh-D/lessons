@@ -1,5 +1,5 @@
 // Load environment variables first
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -18,7 +18,7 @@ async function startServer() {
       cors: {
         origin: process.env.NODE_ENV === 'production' 
           ? ['https://your-production-domain.com'] 
-          : ['http://localhost:3000'],
+          : ['http://localhost:3002'],
         methods: ['GET', 'POST'],
         credentials: true
       },
