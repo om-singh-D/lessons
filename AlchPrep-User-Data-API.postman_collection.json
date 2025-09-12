@@ -1,0 +1,248 @@
+{
+  "info": {
+    "name": "AlchPrep User Data API",
+    "description": "Collection to test user data access routes in AlchPrep application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Signup User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Store the token for subsequent requests",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', responseJson.token);",
+                  "    pm.collectionVariables.set('user_id', responseJson.user.id);",
+                  "    pm.collectionVariables.set('username', responseJson.user.username);",
+                  "    pm.collectionVariables.set('email', responseJson.user.email);",
+                  "    ",
+                  "    console.log('Token stored:', responseJson.token);",
+                  "    console.log('User ID:', responseJson.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman_test_{{$timestamp}}\",\n  \"email\": \"postman_test_{{$timestamp}}@example.com\",\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Test\",\n  \"age\": 25,\n  \"profession\": \"Developer\",\n  \"primaryGoal\": \"Learn new skills\",\n  \"password\": \"testpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create a new user account and get authentication token"
+          }
+        },
+        {
+          "name": "2. Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Store the token for subsequent requests",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', responseJson.token);",
+                  "    pm.collectionVariables.set('user_id', responseJson.user.id);",
+                  "    ",
+                  "    console.log('Login successful, token stored');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{email}}\",\n  \"password\": \"testpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with existing credentials (use after signup)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Data Routes",
+      "item": [
+        {
+          "name": "3. Get User Info (Simplified)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "description": "JWT token from login/signup"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "info"]
+            },
+            "description": "Get simplified user information (recommended for frontend use)\n\nReturns essential user data including:\n- Basic info (username, email, name)\n- Account details\n- Quick stats (level, XP, accuracy rate)\n- Authentication status"
+          }
+        },
+        {
+          "name": "4. Get Complete User Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "description": "JWT token from login/signup"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user"]
+            },
+            "description": "Get complete user data from MongoDB\n\nReturns comprehensive data including:\n- All user fields (excluding password)\n- Learning analytics and statistics\n- Gamification data\n- Learning profile with vector embeddings\n- Complete account history"
+          }
+        },
+        {
+          "name": "5. Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "description": "JWT token from login/signup"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated First Name\",\n  \"lastName\": \"Updated Last Name\",\n  \"bio\": \"Updated bio from Postman\",\n  \"profession\": \"Senior Developer\",\n  \"learning_style\": \"Visual\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user"]
+            },
+            "description": "Update user profile information\n\nAllowed fields to update:\n- firstName, lastName\n- age, profession, primaryGoal\n- avatar, bio\n- learning_style"
+          }
+        },
+        {
+          "name": "6. Get Auth Profile (Existing)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "description": "JWT token from login/signup"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "description": "Get user profile using existing auth/profile endpoint\n\nThis is the original profile endpoint that was already available in your application."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "7. Test Without Token (401 Error)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/user/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "info"]
+            },
+            "description": "Test authentication error - should return 401 Unauthorized"
+          }
+        },
+        {
+          "name": "8. Test Invalid Token (401 Error)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token_here",
+                "description": "Invalid JWT token"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "info"]
+            },
+            "description": "Test with invalid token - should return 401 Unauthorized"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "description": "JWT authentication token (auto-populated from login/signup)"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "description": "User ID (auto-populated from login/signup)"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "description": "Username (auto-populated from signup)"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "description": "Email (auto-populated from signup)"
+    }
+  ]
+}
