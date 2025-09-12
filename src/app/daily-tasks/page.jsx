@@ -3,27 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/header';
 import Footer from '@/components/Footer';
-import LenisProvider from '@/components/ui/lenisProvider';      let newDifficulty = difficulty;
-      let newXp = xp;
-      
-      // Calculate time taken
-      const endTime = new Date().getTime();
-      const timeSpent = questionStartTime ? Math.round((endTime - questionStartTime) / 1000) : 0;
-      
-      if (judgement === 'CORRECT') {
-        newDifficulty = Math.min(difficulty + 2, 1000);
-        newXp = xp + 10; // +10 XP for correct answer
-        setXp(newXp);
-        setDifficulty(newDifficulty);
-        showMessage(`Correct! XP +10! Time: ${timeSpent}s 🎉`);
-        if (newDifficulty === 1000) {
-          showMessage("You've become a professional! 🚀");
-        }
-      } else {
-        newXp = Math.max(xp - 5, 0); // -5 XP for wrong answer, but not below 0
-        setXp(newXp);
-        showMessage(`Incorrect! XP -5. Time: ${timeSpent}s. Keep going! 💪`);
-      }
+import LenisProvider from '@/components/ui/lenisProvider';
+
+// Base URLs
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
 const BACKEND_URL = 'http://localhost:8080/goals';
 
@@ -54,10 +36,6 @@ const App = () => {
   const [difficulty, setDifficulty] = useState(1);
   const [xp, setXp] = useState(0);
 
-  // Time tracking states
-  const [questionStartTime, setQuestionStartTime] = useState(null);
-  const [timeTaken, setTimeTaken] = useState(0);
-
   // Function to show a custom message
   const showMessage = (msg) => {
     setMessage(msg);
@@ -66,7 +44,7 @@ const App = () => {
 
   // Effect to check for user authentication on mount
   useEffect(() => {
-    const userEmail = localStorage.getItem('email') || "omsingh@gmail.com";
+    const userEmail = localStorage.getItem('email') || "vermanickb75@gmail.com";
     if (userEmail) {
       setUserId(userEmail);
       localStorage.setItem('email', userEmail);
@@ -252,22 +230,9 @@ const App = () => {
         showMessage('That’s not quite right. Keep going! 💪');
       }
 
-      // Update the server with the new state including time tracking
+      // Update the server with the new state
       const newGoals = { ...goals };
-      const endTime = new Date().getTime();
-      const timeSpent = questionStartTime ? Math.round((endTime - questionStartTime) / 1000) : 0;
-      
-      const taskUpdate = {
-        ...newGoals[activeGoal].daily_tasks[date][taskId],
-        completed: (judgement === 'CORRECT'),
-        time_opened: questionStartTime,
-        time_solved: endTime,
-        time_taken: timeSpent,
-        user_answer: userAnswer,
-        is_correct: (judgement === 'CORRECT')
-      };
-      
-      newGoals[activeGoal].daily_tasks[date][taskId] = taskUpdate;
+      newGoals[activeGoal].daily_tasks[date][taskId].completed = (judgement === 'CORRECT');
       newGoals[activeGoal].difficulty_level = newDifficulty;
       newGoals[activeGoal].xp = newXp;
 
@@ -277,11 +242,8 @@ const App = () => {
         difficulty_level: newDifficulty,
         xp: newXp
       };
-      
-      const serverResponse = await saveGoalsToServer(payloadToServer);
-      if (serverResponse) {
-        setGoals(newGoals);
-      }
+      await saveGoalsToServer(payloadToServer);
+      setGoals(newGoals);
 
     } catch (error) {
       console.error("Gemini API call failed:", error);
@@ -291,8 +253,6 @@ const App = () => {
       setShowAnswerPrompt(false);
       setUserAnswer('');
       setCurrentTask(null);
-      setQuestionStartTime(null);
-      setTimeTaken(0);
     }
   };
 
@@ -314,8 +274,6 @@ const App = () => {
 
   const handleTaskClick = (task, date, taskId) => {
     if (!task.completed) {
-      const startTime = new Date().getTime();
-      setQuestionStartTime(startTime);
       setCurrentTask({ ...task, date, taskId });
       setShowAnswerPrompt(true);
     }
@@ -437,41 +395,13 @@ const App = () => {
                                   {task.question}
                                 </h4>
                                 {task.completed && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                                        task.is_correct ? 'bg-green-500' : 'bg-red-500'
-                                      }`}>
-                                        {task.is_correct ? (
-                                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                          </svg>
-                                        ) : (
-                                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                          </svg>
-                                        )}
-                                      </div>
-                                      <p className="text-sm text-zinc-400">
-                                        {task.is_correct ? 'Correct' : 'Incorrect'} Answer: {task.answer}
-                                      </p>
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
                                     </div>
-                                    {task.time_taken && (
-                                      <div className="flex items-center space-x-2">
-                                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <p className="text-sm text-zinc-400">Time taken: {task.time_taken}s</p>
-                                      </div>
-                                    )}
-                                    {task.user_answer && (
-                                      <div className="flex items-center space-x-2">
-                                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                        </svg>
-                                        <p className="text-sm text-zinc-400">Your answer: {task.user_answer}</p>
-                                      </div>
-                                    )}
+                                    <p className="text-sm text-zinc-400">Correct Answer: {task.answer}</p>
                                   </div>
                                 )}
                               </div>
