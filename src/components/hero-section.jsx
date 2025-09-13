@@ -151,8 +151,8 @@ export default function HeroSection() {
                                         key={1}
                                         className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5">
                                         <Button asChild size="lg" className="rounded-xl px-5 text-base">
-                                            <Link href="#link">
-                                                <span className="text-nowrap">Start Preparing</span>
+                                            <Link href="/goals">
+                                                <span className="text-nowrap">Set Goal</span>
                                             </Link>
                                         </Button>
                                     </div>
@@ -162,8 +162,8 @@ export default function HeroSection() {
                                         size="lg"
                                         variant="ghost"
                                         className="h-10.5 rounded-xl px-5">
-                                        <Link href="/prepare">
-                                            <span className="text-nowrap">Take a Mock Test</span>
+                                        <Link href="/mentor">
+                                            <span className="text-nowrap">Get Mentorship</span>
                                         </Link>
                                     </Button>
                                 </AnimatedGroup>
