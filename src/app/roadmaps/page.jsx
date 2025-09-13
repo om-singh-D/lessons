@@ -15,7 +15,7 @@ const availableGoals = [
 
 // Base URLs
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
-const BACKEND_URL = 'https://alchprep-backend12.vercel.app';
+const BACKEND_URL = 'http://localhost:8080'; // Replace with your backend URL
 
 // Enhanced Spinner with particles
 const Spinner = ({ size = "h-5 w-5" }) => (
@@ -625,7 +625,7 @@ const App = () => {
                     Your Learning Pipeline
                   </motion.h3>
                   
-                  <div className="flex justify-center items-center gap-16 flex-wrap py-8">
+                  <div className="flex  justify-center items-center gap-16 flex-wrap py-8">
                     {roadmapPhases.map((phase, index) => (
                       <PipelineNode
                         key={phase.id}
@@ -666,7 +666,7 @@ const App = () => {
                     exit={{ opacity: 0, x: -20 }}
                     className="p-8 bg-gradient-to-br from-blue-500/10 to-purple-500/10 backdrop-blur-xl rounded-2xl border border-blue-500/30 shadow-2xl"
                   >
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex items-center mt-6 gap-4 mb-6">
                       <motion.div
                         className={`w-16 h-16 rounded-full bg-gradient-to-r ${availableGoals.find(g => g.id === activeGoal)?.color || 'from-blue-400 to-purple-400'} flex items-center justify-center text-2xl font-bold text-white shadow-lg`}
                         whileHover={{ scale: 1.1 }}
@@ -674,10 +674,10 @@ const App = () => {
                         {activePhaseIndex + 1}
                       </motion.div>
                       <div>
-                        <h3 className="text-3xl font-bold text-white">
+                        <h3 className="text-3xl   font-bold text-white">
                           {roadmapPhases[activePhaseIndex]?.title}
                         </h3>
-                        <p className="text-zinc-400 flex items-center gap-2">
+                        <p className="text-zinc-400 m-10 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           {roadmapPhases[activePhaseIndex]?.duration}
                         </p>
@@ -688,7 +688,7 @@ const App = () => {
                       <div>
                         <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                           <Target className="w-5 h-5 text-green-400" />
-                          Description
+                          Description Hello
                         </h4>
                         <p className="text-zinc-300 leading-relaxed mb-6">
                           {roadmapPhases[activePhaseIndex]?.description}
