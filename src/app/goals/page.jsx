@@ -1,31 +1,14 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Target, ArrowRight, ArrowLeft, Sparkles, CheckCircle } from 'lucide-react';
-
+import { Header } from '@/components/header';
+import Footer from '@/components/Footer';
 // --- Placeholder Components (as per single-file mandate) ---
-const Header = () => (
-  <header className="p-4 bg-zinc-900/50 backdrop-blur-md fixed top-0 left-0 right-0 z-50 shadow-lg">
-    <nav className="max-w-7xl mx-auto flex justify-between items-center text-white">
-      <div className="flex items-center space-x-2">
-        <Sparkles className="h-6 w-6 text-blue-400" />
-        <span className="text-xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">AlchemyPrep</span>
-      </div>
-    </nav>
-  </header>
-);
+ 
 
-const Footer = () => (
-  <footer className="w-full text-center py-4 text-sm text-zinc-500 bg-zinc-950">
-    <p>&copy; 2024 AlchemyPrep. All rights reserved.</p>
-  </footer>
-);
+ 
 
 const LenisProvider = ({ children }) => <div>{children}</div>;
-
-// --- Firebase Imports ---
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Main Goals Page Component ---
 const GoalsPage = () => {
@@ -37,67 +20,13 @@ const GoalsPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
-  
-  // --- Firebase State ---
-  const [db, setDb] = useState(null);
-  const [auth, setAuth] = useState(null);
-  const [userId, setUserId] = useState(null);
 
   // Gemini API Endpoint - Note: API Key is handled securely
-  const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=';
+  const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
 
-  // --- Firebase Initialization and Auth ---
-  useEffect(() => {
-    try {
-      // Use global variables provided by the Canvas environment
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-      const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-      if (Object.keys(firebaseConfig).length === 0) {
-        throw new Error("Firebase configuration is missing.");
-      }
-
-      const app = initializeApp(firebaseConfig, 'alchemy-prep-app');
-      const authInstance = getAuth(app);
-      const dbInstance = getFirestore(app);
-
-      setAuth(authInstance);
-      setDb(dbInstance);
-
-      onAuthStateChanged(authInstance, (user) => {
-        if (user) {
-          setUserId(user.uid);
-          console.log("User authenticated:", user.uid);
-        } else {
-          // Fallback to anonymous sign-in if no token is available
-          signInAnonymously(authInstance).then((anonUserCredential) => {
-            setUserId(anonUserCredential.user.uid);
-            console.log("Signed in anonymously:", anonUserCredential.user.uid);
-          });
-        }
-      });
-      
-      // Attempt to sign in with the provided custom token
-      if (initialAuthToken) {
-        signInWithCustomToken(authInstance, initialAuthToken).catch(err => {
-          console.error("Custom token sign-in failed, falling back to anonymous:", err);
-        });
-      }
-    } catch (err) {
-      console.error("Firebase setup error:", err);
-      setError("Failed to initialize the application. Please try again.");
-      setIsLoading(false);
-    }
-  }, []);
-
-  // --- Fetch Dynamic Questions from Gemini API ---
+  // --- Fetch Dynamic Questions from Gemini API on load ---
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!userId) {
-        return; // Wait for Firebase auth to be ready
-      }
-
       try {
         const questionsPrompt = {
           contents: [{
@@ -141,27 +70,7 @@ const GoalsPage = () => {
       }
     };
     fetchQuestions();
-  }, [userId]); // Depend on userId to ensure auth is ready
-
-  // --- Firestore Data Subscription (for real-time updates) ---
-  useEffect(() => {
-    if (!db || !userId) return;
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const goalRef = doc(db, `artifacts/${appId}/users/${userId}/goals/my_goal`);
-
-    const unsubscribe = onSnapshot(goalRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const goalData = snapshot.data();
-        console.log("Goal data updated:", goalData);
-        // You could update state here if needed
-      }
-    }, (err) => {
-      console.error("Firestore subscription error:", err);
-    });
-
-    return () => unsubscribe();
-  }, [db, userId]);
+  }, []);
 
   // --- Form Submission Handler ---
   const handleFormSubmit = async (e) => {
@@ -177,13 +86,6 @@ const GoalsPage = () => {
     setError(null);
 
     try {
-      if (!db || !userId) {
-        throw new Error('Database or user not ready.');
-      }
-
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const goalRef = doc(db, `artifacts/${appId}/users/${userId}/goals/my_goal`);
-      
       const miscData = dynamicQuestions.map((question, index) => {
         return { question: question, answer: dynamicAnswers[index] || '' };
       });
@@ -192,21 +94,20 @@ const GoalsPage = () => {
         goalKeyword: goalKeyword,
         end_goal: endGoal,
         misc: miscData,
-        createdAt: new Date(),
-        userId: userId
+        createdAt: new Date().toISOString(),
       };
 
-      await setDoc(goalRef, payload, { merge: true });
-      console.log('Goal successfully created/updated in Firestore.');
+      // Save to localStorage
+      localStorage.setItem('userGoal', JSON.stringify(payload));
+      console.log('Goal successfully saved to localStorage:', payload);
 
       // Redirect after success
       setTimeout(() => {
-        // In a real app, this would be a proper router navigation
         window.location.href = '/daily-tasks';
       }, 2000);
 
     } catch (err) {
-      console.error("Firestore write failed:", err);
+      console.error("Failed to save goal:", err);
       setError("Failed to save your goal. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -226,14 +127,14 @@ const GoalsPage = () => {
     }
   };
 
-  if (isLoading || !userId) {
+  if (isLoading) {
     return (
       <LenisProvider>
         <div className="min-h-screen bg-zinc-950 text-white font-sans flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mb-4"></div>
             <p className="text-zinc-400 font-light">
-              {userId ? "Fetching personalized questions..." : "Connecting securely..."}
+              Fetching personalized questions...
             </p>
           </div>
         </div>
@@ -377,12 +278,6 @@ const GoalsPage = () => {
           <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
         </div>
-        {/* User ID Display for Debugging */}
-        {userId && (
-          <div className="fixed top-4 right-4 z-50 text-xs text-zinc-500 p-2 rounded-lg bg-zinc-900/50 backdrop-blur-lg border border-zinc-700">
-            User ID: {userId}
-          </div>
-        )}
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-28 pb-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center relative z-10">
