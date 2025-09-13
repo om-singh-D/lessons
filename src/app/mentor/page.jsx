@@ -36,7 +36,7 @@ const Page = () => {
         setError(null);
         try {
           // Fetch user data
-          const userRes = await fetch(`http://localhost:8080/user/${userEmail}`, {
+          const userRes = await fetch(`https://alchprep-backend12.vercel.app/user/${userEmail}`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
           });
           if (!userRes.ok) throw new Error('Failed to fetch user data');
@@ -44,7 +44,7 @@ const Page = () => {
           setUserData(user);
 
           // Fetch user goals
-          const goalsRes = await fetch(`http://localhost:8080/goals/${userEmail}`, {
+          const goalsRes = await fetch(`https://alchprep-backend12.vercel.app/goals/${userEmail}`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
           });
           if (!goalsRes.ok) throw new Error('Failed to fetch goals data');
@@ -52,7 +52,7 @@ const Page = () => {
           setUserGoals(goals);
 
           // Fetch leaderboard data (assuming a dedicated endpoint)
-          const leaderboardRes = await fetch('http://localhost:8080/leaderboard', {
+          const leaderboardRes = await fetch('https://alchprep-backend12.vercel.app/leaderboard', {
             headers: { 'Authorization': `Bearer ${authToken}` }
           });
           if (!leaderboardRes.ok) throw new Error('Failed to fetch leaderboard');

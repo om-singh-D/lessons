@@ -107,7 +107,7 @@ const GoalsPage = () => {
                 misc: miscData 
             };
             
-            const response = await fetch(`http://localhost:8080/goals/${email}`, {
+            const response = await fetch(`https://alchprep-backend12.vercel.app/goals/${email}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

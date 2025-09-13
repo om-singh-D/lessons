@@ -7,8 +7,8 @@ import LenisProvider from '@/components/ui/lenisProvider';
 import { Trophy, Medal, Crown, Users, TrendingUp, Zap, Target, Star } from 'lucide-react';
 
 // API endpoints
-const LEADERBOARD_API_URL = 'http://localhost:8080/leaderboard';
-const USER_API_URL = 'http://localhost:8080/user';
+const LEADERBOARD_API_URL = 'https://alchprep-backend12.vercel.app/leaderboard';
+const USER_API_URL = 'https://alchprep-backend12.vercel.app/user';
 
 // A simple spinner for loading states
 const Spinner = () => (
