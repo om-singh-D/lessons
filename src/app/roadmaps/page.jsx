@@ -441,44 +441,7 @@ const App = () => {
         </motion.section>
 
         {/* Goal Selection */}
-        <motion.section 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="mb-12"
-        >
-          <h3 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">
-            <Rocket className="w-6 h-6 text-blue-400" />
-            Choose Your Learning Adventure
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
-            {availableGoals.map((goal, index) => (
-              <motion.button
-                key={goal.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => handleGoalChange(goal.id)}
-                className={`group p-6 rounded-xl border transition-all duration-300 ${
-                  activeGoal === goal.id
-                    ? `bg-gradient-to-br ${goal.color} border-white/30 shadow-lg scale-105`
-                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:scale-105'
-                }`}
-                whileHover={{ y: -5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  className="text-4xl mb-3"
-                  animate={activeGoal === goal.id ? { rotate: [0, 10, -10, 0] } : {}}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {goal.icon}
-                </motion.div>
-                <p className="font-bold text-white">{goal.name}</p>
-              </motion.button>
-            ))}
-          </div>
-        </motion.section>
-
+         
         {/* Messages */}
         <AnimatePresence>
           {apiError && (
