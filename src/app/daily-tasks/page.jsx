@@ -27,11 +27,10 @@ const App = () => {
     const [expandedDates, setExpandedDates] = useState({});
     const [apiError, setApiError] = useState(null);
     const [message, setMessage] = useState('');
-    const [userStats, setUserStats] = useState({}); // New state for user stats
-    const [showCreateGoalModal, setShowCreateGoalModal] = useState(false); // New state for modal
-    const [newGoalKeyword, setNewGoalKeyword] = useState(''); // New state for new goal keyword
-    const [newEndGoal, setNewEndGoal] = useState(''); // New state for end goal
-
+    const [userStats, setUserStats] = useState({});
+    const [showCreateGoalModal, setShowCreateGoalModal] = useState(false);
+    const [newGoalKeyword, setNewGoalKeyword] = useState('');
+    const [newEndGoal, setNewEndGoal] = useState('');
     const [showAnswerPrompt, setShowAnswerPrompt] = useState(false);
     const [userAnswer, setUserAnswer] = useState('');
     const [currentTask, setCurrentTask] = useState(null);
@@ -58,8 +57,9 @@ const App = () => {
             for (const date in goals[activeGoal].daily_tasks) {
                 const tasks = goals[activeGoal].daily_tasks[date];
                 for (const taskId in tasks) {
-                    pastQuestions.push(tasks[taskId].question);
-                    if (tasks[taskId].completed) completedTasks++;
+                    const task = tasks[taskId];
+                    pastQuestions.push(task.description || task.question);
+                    if (task.status === "completed" || task.completed) completedTasks++;
                     totalTasks++;
                 }
             }
@@ -169,13 +169,12 @@ const App = () => {
         const { performanceContext, pastQuestions } = getPerformanceAndPastQuestions();
         const difficulty = goals[goalKeyword]?.difficulty_level || 1;
 
-        const prompt = `You are a helpful assistant for a user working on a goal related to ${goalKeyword}. The user's current difficulty level is ${difficulty} (on a scale of 1-1000). Based on the following past performance data: "${performanceContext}", generate a list of three to four brand new, simple daily tasks for today (${today}). DO NOT repeat any of the following past questions: ${JSON.stringify(pastQuestions)}. Adjust the complexity of the tasks based on the difficulty level (e.g., a difficulty of 10 is much easier than a difficulty of 900). Each task must be related to the goal and should be easy to understand. For each task, provide a concise question and a short, correct answer. Return the output as a JSON array in the following format: [{ "question": "...", "answer": "...", "completed": false }]`;
+        const prompt = `Generate 3-4 simple daily tasks for goal "${goalKeyword}". Return JSON: [{ "description": "...", "answer": "...", "status": "pending", "xp_gained": 0 }]`;
 
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: { "type": "ARRAY", "items": { "type": "OBJECT", "properties": { "question": { "type": "STRING" }, "answer": { "type": "STRING" }, "completed": { "type": "BOOLEAN" } }, "propertyOrdering": ["question", "answer", "completed"] } }
+                responseMimeType: "application/json"
             }
         };
 
@@ -197,9 +196,15 @@ const App = () => {
             return;
         }
 
+        // Convert to the sticky format used in first code
         const newTasks = {};
         generatedTasks.forEach((task, index) => {
-            newTasks[`task${index + 1}`] = task;
+            newTasks[`task${index + 1}`] = {
+                description: task.description,
+                answer: task.answer,
+                status: "pending",
+                xp_gained: 0
+            };
         });
 
         const payloadToServer = {
@@ -216,85 +221,66 @@ const App = () => {
         setGenerating(false);
     };
 
-  const judgeAnswer = async (task, date, taskId) => {
-    setGenerating(true);
-    setApiError(null);
+    // Updated judgeAnswer function with sticky logic from first code
+    const judgeAnswer = async (task, date, taskId) => {
+        setGenerating(true);
+        setApiError(null);
+        const prompt = `Task: "${task.description || task.question}", Correct: "${task.answer}", User: "${userAnswer}". Respond "CORRECT" or "INCORRECT".`;
 
-    const prompt = `You are a helpful assistant that judges a user's answer to a task.
-    Task: "${task.question}"
-    Correct Answer: "${task.answer}"
-    User's Answer: "${userAnswer}"
-    Is the user's answer correct or close enough? Respond with "CORRECT" or "INCORRECT".`;
+        const payload = { 
+            contents: [{ parts: [{ text: prompt }] }], 
+            generationConfig: { responseMimeType: "text/plain" } 
+        };
 
-    const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "text/plain" }
-    };
+        try {
+            const res = await fetch(API_URL, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload) 
+            });
+            const result = await res.json();
+            const judgement = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        const judgement = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase();
+            let newGoals = { ...goals };
+            let xpGain = 0;
+            
+            if (judgement === "CORRECT") {
+                xpGain = 25;
+                showMessage(`Correct! +${xpGain} XP`);
 
-        let newGoals = { ...goals };
-        let currentGoalXP = newGoals[activeGoal]?.xp || 0;
-        let xpGain = 0;
+                // Update task with sticky completion status
+                newGoals[activeGoal].daily_tasks[date][taskId] = {
+                    description: task.description || task.question,
+                    answer: task.answer,
+                    status: "completed",
+                    xp_gained: xpGain
+                };
 
-        if (judgement === 'CORRECT') {
-            xpGain = 25; // or 10, decide your XP value
-            currentGoalXP += xpGain;
-            showMessage(`Correct! XP +${xpGain}! 🎉`);
-
-            // ✅ Update task in state
-            newGoals[activeGoal].daily_tasks[date][taskId] = {
-                description: task.question,
-                status: "completed",
-                xp_gained: xpGain
-            };
-
-            // ✅ PUT request to backend with updated task
-            const payloadToServer = {
-                goalKeyword: activeGoal,
-                end_goal: newGoals[activeGoal].end_goal,
-                daily_tasks: {
-                    [date]: {
-                        [taskId]: {
-                            description: task.question,
-                            status: "completed",
-                            xp_gained: xpGain
+                // Save the updated task to server with sticky format
+                await saveGoalsToServer({
+                    goalKeyword: activeGoal,
+                    daily_tasks: {
+                        [date]: {
+                            [taskId]: newGoals[activeGoal].daily_tasks[date][taskId]
                         }
                     }
-                },
-                roadmap: newGoals[activeGoal].roadmap || {},
-                progress_report: newGoals[activeGoal].progress_report || {}
-            };
-
-            await fetch(`${BACKEND_URL}/goals/${userId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payloadToServer)
-            });
-        } else {
-            showMessage('That’s not quite right. Keep going! 💪');
+                });
+            } else {
+                showMessage("Incorrect, try again!");
+            }
+            
+            setGoals(newGoals);
+            fetchUserData();
+        } catch (err) {
+            console.error(err);
+            setApiError("Failed to judge answer.");
+        } finally {
+            setGenerating(false);
+            setShowAnswerPrompt(false);
+            setUserAnswer('');
+            setCurrentTask(null);
         }
-
-        newGoals[activeGoal].xp = currentGoalXP;
-        setGoals(newGoals);
-        fetchUserData();
-    } catch (error) {
-        console.error("Gemini API call failed:", error);
-        setApiError('Failed to judge answer. Please try again.');
-    } finally {
-        setGenerating(false);
-        setShowAnswerPrompt(false);
-        setUserAnswer('');
-        setCurrentTask(null);
-    }
-};
+    };
 
     const createNewGoal = async () => {
         if (!newGoalKeyword || !newEndGoal) {
@@ -333,8 +319,9 @@ const App = () => {
         window.location.reload();
     };
 
+    // Updated handleTaskClick to work with sticky format
     const handleTaskClick = (task, date, taskId) => {
-        if (!task.completed) {
+        if (!(task.status === "completed" || task.completed)) {
             setCurrentTask({ ...task, date, taskId });
             setShowAnswerPrompt(true);
         }
@@ -382,7 +369,6 @@ const App = () => {
                                 </button>
                                 <button
                                     onClick={() => {
-                                        // A simple alert to show stats. Can be replaced with a modal.
                                         alert(`User Stats:\nTotal XP: ${totalXp}\nTotal Questions: ${userStats.total_questions}\nMax Questions in a Day: ${userStats.max_questions_in_a_day}`);
                                     }}
                                     className="px-6 py-3 rounded-xl font-semibold text-zinc-300 bg-white/10 hover:bg-white/20 transition-all duration-300 backdrop-blur-md flex items-center gap-2"
@@ -468,7 +454,7 @@ const App = () => {
                             </div>
                         )}
                         
-                        {/* Tasks List */}
+                        {/* Tasks List - Updated to work with sticky format */}
                         {loading ? (
                             <div className="text-center py-16">
                                 <div className="w-16 h-16 bg-white/10 rounded-full mx-auto mb-4 animate-pulse"></div>
@@ -495,27 +481,29 @@ const App = () => {
                                                 <div className="px-6 pb-6 border-t border-white/10 pt-6 space-y-4">
                                                     {Object.keys(goals[activeGoal].daily_tasks[date]).map(taskId => {
                                                         const task = goals[activeGoal].daily_tasks[date][taskId];
+                                                        const isCompleted = task.status === "completed" || task.completed;
                                                         return (
                                                             <div
                                                                 key={taskId}
                                                                 className={`bg-white/5 backdrop-blur-md p-4 rounded-xl flex flex-col items-start space-y-3 border border-white/10 transition-all duration-300 ${
-                                                                    task.completed
+                                                                    isCompleted
                                                                         ? 'opacity-60'
                                                                         : 'hover:border-blue-500/50 hover:bg-white/10 cursor-pointer transform hover:scale-[1.02]'
                                                                 }`}
                                                                 onClick={() => handleTaskClick(task, date, taskId)}
                                                             >
-                                                                <h4 className={`text-lg font-medium ${task.completed ? 'line-through text-zinc-500' : 'text-white'}`}>
-                                                                    {task.question}
+                                                                <h4 className={`text-lg font-medium ${isCompleted ? 'line-through text-zinc-500' : 'text-white'}`}>
+                                                                    {task.description || task.question}
                                                                 </h4>
-                                                                {task.completed && (
+                                                                {isCompleted && (
                                                                     <div className="flex items-center space-x-2">
                                                                         <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                                                                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                             </svg>
                                                                         </div>
-                                                                        <p className="text-sm text-zinc-400">Correct Answer: {task.answer}</p>
+                                                                        <p className="text-sm text-zinc-400">Answer: {task.answer}</p>
+                                                                        {task.xp_gained > 0 && <span className="ml-auto text-purple-400 font-semibold">+{task.xp_gained} XP</span>}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -592,7 +580,7 @@ const App = () => {
                             <h3 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
                                 Answer the Task
                             </h3>
-                            <p className="text-lg text-zinc-300 text-center font-light">{currentTask.question}</p>
+                            <p className="text-lg text-zinc-300 text-center font-light">{currentTask.description || currentTask.question}</p>
                             <input
                                 type="text"
                                 value={userAnswer}
