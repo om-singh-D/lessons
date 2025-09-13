@@ -6,87 +6,96 @@ import LenisProvider from '@/components/ui/lenisProvider';
 import { BookOpen, Clock, Users, Trophy, Target, TrendingUp, Zap, Calendar, CheckCircle, XCircle } from 'lucide-react';
 
 const Page = () => {
-  const [userEmail, setUserEmail] = useState(null);
-  const [authToken, setAuthToken] = useState(null);
-  const [userData, setUserData] = useState(null);
-  const [userGoals, setUserGoals] = useState(null);
-  const [leaderboardData, setLeaderboardData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [userGoals, setUserGoals] = useState(null);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // 1. Get email and token from local storage
-    const email = localStorage.getItem('email') || 'vermanickb75@gmail.com'; // Fallback
-    const token = localStorage.getItem('token');
+  useEffect(() => {
+    // 1. Get email and token from local storage
+    const email = localStorage.getItem('email') || 'vermanickb75@gmail.com'; // Fallback
+    const token = localStorage.getItem('token');
 
-    if (email && token) {
-      setUserEmail(email);
-      setAuthToken(token);
-    } else {
-      setIsLoading(false);
-      setError("User not authenticated. Please log in.");
-    }
-  }, []);
+    if (email && token) {
+      setUserEmail(email);
+      setAuthToken(token);
+    } else {
+      setIsLoading(false);
+      setError("User not authenticated. Please log in.");
+    }
+  }, []);
 
-  useEffect(() => {
-    if (userEmail && authToken) {
-      // 2. Fetch all crucial data
-      const fetchAllData = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          // Fetch user data
-          const userRes = await fetch(`http://localhost:8080/user/${userEmail}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-          });
-          if (!userRes.ok) throw new Error('Failed to fetch user data');
-          const user = await userRes.json();
-          setUserData(user);
+  useEffect(() => {
+    if (userEmail && authToken) {
+      // 2. Fetch all crucial data
+      const fetchAllData = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          // Fetch user data
+          const userRes = await fetch(`http://localhost:8080/user/${userEmail}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (!userRes.ok) throw new Error('Failed to fetch user data');
+          const user = await userRes.json();
+          setUserData(user);
 
-          // Fetch user goals
-          const goalsRes = await fetch(`http://localhost:8080/goals/${userEmail}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-          });
-          if (!goalsRes.ok) throw new Error('Failed to fetch goals data');
-          const goals = await goalsRes.json();
-          setUserGoals(goals);
+          // Fetch user goals
+          const goalsRes = await fetch(`http://localhost:8080/goals/${userEmail}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (!goalsRes.ok) throw new Error('Failed to fetch goals data');
+          const goals = await goalsRes.json();
+          setUserGoals(goals);
 
-          // Fetch leaderboard data (assuming a dedicated endpoint)
-          const leaderboardRes = await fetch('http://localhost:8080/leaderboard', {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-          });
-          if (!leaderboardRes.ok) throw new Error('Failed to fetch leaderboard');
-          const leaderboard = await leaderboardRes.json();
-          setLeaderboardData(leaderboard);
+          // Fetch leaderboard data (assuming a dedicated endpoint)
+          const leaderboardRes = await fetch('http://localhost:8080/leaderboard', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (!leaderboardRes.ok) throw new Error('Failed to fetch leaderboard');
+          const leaderboard = await leaderboardRes.json();
+          setLeaderboardData(leaderboard);
 
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setIsLoading(false);
-        }
-      };
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-      fetchAllData();
-    }
-  }, [userEmail, authToken]);
-  
+      fetchAllData();
+    }
+  }, [userEmail, authToken]);
+
   // Helper function to extract all daily tasks into a flat array
   const getAllDailyTasks = (goalsData) => {
-    if (!goalsData?.goals?.AI?.daily_tasks) return [];
+    if (!goalsData || !goalsData.goals) return [];
     const tasks = [];
-    const dailyTasksByDate = goalsData.goals.AI.daily_tasks;
-    for (const date in dailyTasksByDate) {
-      if (Object.hasOwnProperty.call(dailyTasksByDate, date)) {
-        const tasksForDate = dailyTasksByDate[date];
-        for (const taskId in tasksForDate) {
-          if (Object.hasOwnProperty.call(tasksForDate, taskId)) {
-            tasks.push({
-              id: `${date}-${taskId}`,
-              date: date,
-              name: tasksForDate[taskId].question,
-              completed: tasksForDate[taskId].completed,
-              topic: tasksForDate[taskId].difficulty_level ? 'AI' : 'AI' // Assuming topic is 'AI' for all tasks
-            });
+    // Iterate over each top-level goal keyword (e.g., 'Ai Ml')
+    for (const goalKeyword in goalsData.goals) {
+      if (Object.hasOwnProperty.call(goalsData.goals, goalKeyword)) {
+        const goal = goalsData.goals[goalKeyword];
+        if (goal.daily_tasks) {
+          // Iterate over each date within the daily_tasks
+          for (const date in goal.daily_tasks) {
+            if (Object.hasOwnProperty.call(goal.daily_tasks, date)) {
+              const tasksForDate = goal.daily_tasks[date];
+              // Iterate over each task within the specific date
+              for (const taskId in tasksForDate) {
+                if (Object.hasOwnProperty.call(tasksForDate, taskId)) {
+                  tasks.push({
+                    id: `${goalKeyword}-${date}-${taskId}`,
+                    date: date,
+                    name: tasksForDate[taskId].question,
+                    completed: tasksForDate[taskId].completed,
+                    topic: goalKeyword // Use the goal keyword as the topic
+                  });
+                }
+              }
+            }
           }
         }
       }
@@ -94,42 +103,39 @@ const Page = () => {
     return tasks;
   };
 
-  const getMotivationalMessage = () => {
-    // FIX: Use the new helper function
+  const getMotivationalMessage = () => {
     const allDailyTasks = getAllDailyTasks(userGoals);
-    if (allDailyTasks.length === 0) {
-      return "Start your first task today and level up!";
-    }
     const completedTasks = allDailyTasks.filter(task => task.completed).length;
     const totalTasks = allDailyTasks.length;
+
+    if (totalTasks === 0) {
+      return "Start your first task today and level up! 🎉";
+    }
+
     if (completedTasks === totalTasks) {
       return "🎉 Great job! You completed all your tasks. Keep up the momentum!";
     }
-    const pastTasks = allDailyTasks.filter(task => new Date(task.date) < new Date()).filter(task => !task.completed);
-    if (pastTasks.length > 0) {
-      return `Hey there! You have ${pastTasks.length} past tasks to complete. Let's finish them and clear your backlog. You got this!`;
+
+    const completionPercentage = (completedTasks / totalTasks) * 100;
+    if (completionPercentage >= 75) {
+      return "Excellent progress! You're almost there, just a few more tasks to complete. You can do it!";
+    } else if (completionPercentage >= 50) {
+      return "You're halfway through! Keep pushing and you'll finish all your tasks in no time. Keep it up!";
+    } else if (completionPercentage > 0) {
+      return "You've made a great start! Every step counts. Let's tackle the next task together!";
     }
-    return "You're doing great! Keep pushing forward on your daily tasks.";
+
+    return "You're at the beginning of an amazing journey. Let's start with your first task and build some momentum!";
   };
 
   const getPersonalizedSuggestions = () => {
-    // FIX: Get unsolved tasks by filtering the new array
     const allDailyTasks = getAllDailyTasks(userGoals);
     const unsolvedTasks = allDailyTasks.filter(task => !task.completed);
     if (unsolvedTasks.length === 0) {
-      return "No specific weak points found. Keep practicing!";
+      return "You've solved all your tasks! Great work. To keep improving, consider exploring advanced topics or a new learning path.";
     }
-    
-    // Using the topics from your provided data (or assuming them)
-    const weakPoints = unsolvedTasks.map(task => {
-        // You would need a mapping from question to topic
-        if (task.name.includes('computer see things')) return 'Computer Vision';
-        if (task.name.includes('new idea from this century')) return 'History of AI';
-        if (task.name.includes('supervised and unsupervised')) return 'Supervised/Unsupervised Learning';
-        return 'General AI Concepts';
-    });
-    
-    const uniqueTopics = [...new Set(weakPoints)];
+
+    const uniqueTopics = [...new Set(unsolvedTasks.map(task => task.topic))];
     return `You've left some questions unsolved on these topics: ${uniqueTopics.join(', ')}. Focus on these areas to improve!`;
   };
 
@@ -159,10 +165,11 @@ const Page = () => {
         </div>
       );
     }
-    
+
     const allDailyTasks = getAllDailyTasks(userGoals);
     const completedTasks = allDailyTasks.filter(task => task.completed).length;
-    const totalXP = (userData.xp["2025-09-12"] || 0) + (userData.xp["2025-09-13"] || 0);
+    // The userData.xp structure is now an object with date keys.
+    const totalXP = Object.values(userData.xp).reduce((sum, points) => sum + points, 0);
 
     return (
       <div className="min-h-screen bg-zinc-950 text-white">
@@ -198,7 +205,7 @@ const Page = () => {
         <section className="py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
+
               {/* Daily Tasks Card */}
               <div className="lg:col-span-2">
                 <div className="relative bg-white/5 backdrop-blur-lg rounded-xl border border-white/10 shadow-lg p-6 hover:shadow-2xl transition-all duration-300">
@@ -207,19 +214,19 @@ const Page = () => {
                       <Calendar className="w-6 h-6 text-blue-400" />
                       Daily Tasks
                     </h2>
-                    <a 
-                      href="/daily-tasks" 
+                    <a
+                      href="/daily-tasks"
                       className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm font-medium hover:bg-blue-500/30 transition-colors duration-300 border border-blue-500/30"
                     >
                       View All
                     </a>
                   </div>
-                  
+
                   <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
                     {allDailyTasks.slice(0, 6).map(task => (
                       <div key={task.id} className={`p-4 rounded-lg border transition-all duration-300 ${
-                        task.completed 
-                          ? 'bg-green-500/10 border-green-500/30 text-green-300' 
+                        task.completed
+                          ? 'bg-green-500/10 border-green-500/30 text-green-300'
                           : 'bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10'
                       }`}>
                         <div className="flex items-center justify-between">
@@ -243,7 +250,7 @@ const Page = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   {allDailyTasks.length === 0 && (
                     <div className="text-center py-8">
                       <BookOpen className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
@@ -264,8 +271,8 @@ const Page = () => {
                   <p className="text-zinc-300 text-sm mb-4 leading-relaxed">
                     {getPersonalizedSuggestions()}
                   </p>
-                  <a 
-                    href="/roadmaps" 
+                  <a
+                    href="/roadmaps"
                     className="inline-flex items-center px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm font-medium hover:bg-purple-500/30 transition-colors duration-300 border border-purple-500/30"
                   >
                     View Roadmap
@@ -285,8 +292,8 @@ const Page = () => {
                       }`}>
                         <div className="flex items-center gap-3">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            index === 0 ? 'bg-yellow-500 text-black' : 
-                            index === 1 ? 'bg-gray-400 text-black' : 
+                            index === 0 ? 'bg-yellow-500 text-black' :
+                            index === 1 ? 'bg-gray-400 text-black' :
                             index === 2 ? 'bg-orange-600 text-white' : 'bg-zinc-700 text-white'
                           }`}>
                             {index + 1}
@@ -301,8 +308,8 @@ const Page = () => {
                       </div>
                     ))}
                   </div>
-                  <a 
-                    href="/leaderboard" 
+                  <a
+                    href="/leaderboard"
                     className="inline-flex items-center px-4 py-2 bg-yellow-500/20 text-yellow-300 rounded-lg text-sm font-medium hover:bg-yellow-500/30 transition-colors duration-300 border border-yellow-500/30 mt-4 w-full justify-center"
                   >
                     View Full Leaderboard
@@ -322,7 +329,7 @@ const Page = () => {
         <Header />
         {renderContent()}
         <Footer />
-        
+
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
