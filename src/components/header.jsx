@@ -14,13 +14,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, CircleUser, Sun, Moon, Monitor } from "lucide-react";
+import { Menu, CircleUser, Sun, Moon, Monitor, ChevronDown } from "lucide-react";
 
 // --- Navigation links ---
 const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/prepare", label: "Prepare" },
   { href: "/about", label: "About" },
+];
+
+// --- Mentor dropdown items ---
+const mentorDropdownItems = [
+  { href: "/goals", label: "Set Goals" },
+  { href: "/daily-tasks", label: "Daily Assessments" },
+  { href: "/roadmaps", label: "Roadmap" },
+  { href: "/mentor", label: "Mentor" },
 ];
 
 export function Header() {
@@ -84,6 +92,26 @@ export function Header() {
                 <span className="absolute inset-x-0 -bottom-1 h-0.5 scale-x-0 bg-primary transition-transform duration-200 group-hover:scale-x-100" />
               </Link>
             ))}
+            
+            {/* Mentor Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="group relative flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  Mentor
+                  <ChevronDown className="h-3 w-3 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <span className="absolute inset-x-0 -bottom-1 h-0.5 scale-x-0 bg-primary transition-transform duration-200 group-hover:scale-x-100" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-48">
+                {mentorDropdownItems.map((item) => (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link href={item.href} className="cursor-pointer">
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </nav>
 
@@ -202,6 +230,23 @@ const MobileSheet = ({ isLoggedIn, onLogout }) => (
             </Link>
           </SheetClose>
         ))}
+        
+        {/* Mentor section */}
+        <div className="mt-2">
+          <div className="px-3 py-2 text-sm font-medium text-foreground">
+            Mentor
+          </div>
+          {mentorDropdownItems.map((item) => (
+            <SheetClose asChild key={item.href}>
+              <Link
+                href={item.href}
+                className="rounded-md px-6 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            </SheetClose>
+          ))}
+        </div>
       </nav>
       <div className="mt-auto border-t p-4">
         <div className="flex items-center justify-between">
