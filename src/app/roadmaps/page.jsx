@@ -1,3 +1,4 @@
+ 
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -15,9 +16,20 @@ const availableGoals = [
 
 // Base URLs
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=AIzaSyC9ordkhWuD8B7axV5wYoMswPy9ghOJfbY';
-const BACKEND_URL = 'http://localhost:8080'; // Replace with your backend URL
+const BACKEND_URL = 'https://alchprep-backend12.vercel.app';
 
-// Enhanced Spinner with particles
+// Map end_goal to selectedLevel
+const mapEndGoalToLevel = (endGoal) => {
+  if (!endGoal) return 'beginner';
+  const lowerGoal = endGoal.toLowerCase();
+  if (lowerGoal.includes('basic') || lowerGoal.includes('beginner')) return 'beginner';
+  if (lowerGoal.includes('intermediate') || lowerGoal.includes('web application')) return 'intermediate';
+  if (lowerGoal.includes('advanced') || lowerGoal.includes('expert')) return 'advanced';
+  if (lowerGoal.includes('mastery')) return 'expert';
+  return 'beginner'; // Default fallback
+};
+
+// Spinner Component
 const Spinner = ({ size = "h-5 w-5" }) => (
   <div className="relative flex items-center justify-center">
     <motion.div
@@ -45,7 +57,6 @@ const PipelineNode = ({ phase, index, isActive, isCompleted, onClick }) => {
       className="relative group cursor-pointer"
       onClick={onClick}
     >
-      {/* Connection Line */}
       {index > 0 && (
         <motion.div
           initial={{ width: 0 }}
@@ -55,7 +66,6 @@ const PipelineNode = ({ phase, index, isActive, isCompleted, onClick }) => {
         />
       )}
       
-      {/* Node */}
       <motion.div
         className={`relative w-20 h-20 rounded-full border-2 transition-all duration-300 ${
           isCompleted 
@@ -67,7 +77,6 @@ const PipelineNode = ({ phase, index, isActive, isCompleted, onClick }) => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
-        {/* Pulsing animation for active node */}
         {isActive && (
           <motion.div
             className={`absolute inset-0 rounded-full bg-gradient-to-r ${goal.color} opacity-30`}
@@ -76,18 +85,15 @@ const PipelineNode = ({ phase, index, isActive, isCompleted, onClick }) => {
           />
         )}
         
-        {/* Icon */}
         <div className="absolute inset-0 flex items-center justify-center text-2xl">
           {isCompleted ? <CheckCircle className="w-8 h-8 text-white" /> : phase.icon}
         </div>
         
-        {/* Phase number */}
         <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
           {index + 1}
         </div>
       </motion.div>
       
-      {/* Label */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -113,7 +119,6 @@ const RoadmapPhaseCard = ({ phase, index, isActive }) => (
         : 'bg-white/5 border-white/10 hover:bg-white/10'
     }`}
   >
-    {/* Animated background particles */}
     <div className="absolute inset-0 overflow-hidden rounded-xl">
       {[...Array(3)].map((_, i) => (
         <motion.div
@@ -193,7 +198,7 @@ const App = () => {
     }
   }, []);
 
-  // Save to server with enhanced payload
+  // Save to server
   const saveGoalsToServer = async (payload) => {
     try {
       const response = await fetch(`${BACKEND_URL}/goals/${userId}`, {
@@ -214,7 +219,7 @@ const App = () => {
     }
   };
 
-  // Enhanced roadmap generation with pipeline visualization
+  // Enhanced roadmap generation
   const generateRoadmap = async () => {
     setGeneratingRoadmap(true);
     setApiError(null);
@@ -222,12 +227,11 @@ const App = () => {
     setShowPipeline(true);
     
     try {
-      // Simulate progress updates
       const progressInterval = setInterval(() => {
         setGenerationProgress(prev => prev < 80 ? prev + 10 : prev);
       }, 200);
 
-      const prompt = `You are an expert learning architect. Create an EPIC and comprehensive learning roadmap for "${activeGoal}" at ${selectedLevel} level.
+      const prompt = `You are an expert learning architect. Create an EPIC and comprehensive learning roadmap for "${activeGoal}" at ${selectedLevel} level with difficulty level ${difficulty} and current XP ${xp}.
 
       Create a detailed roadmap with 6-8 phases that transform the learner from current level to mastery. Each phase should be:
       - Progressively challenging and building upon previous phases
@@ -293,7 +297,6 @@ const App = () => {
         throw new Error("Invalid response format");
       }
 
-      // Process phases for visualization
       const phases = Object.entries(roadmapData.roadmap).map(([key, phase], index) => ({
         id: key,
         title: phase.title,
@@ -309,14 +312,15 @@ const App = () => {
       setGenerationProgress(100);
       clearInterval(progressInterval);
 
-      // Enhanced payload for server
       const payloadToServer = {
         goalKeyword: activeGoal,
         end_goal: roadmapData.end_goal,
         roadmap: roadmapData.roadmap,
         daily_tasks: roadmapData.daily_tasks,
         progress_report: roadmapData.progress_report,
-        misc: `Generated on ${new Date().toISOString()} with ${selectedLevel} level`
+        misc: `Generated on ${new Date().toISOString()} with ${selectedLevel} level`,
+        difficulty_level: difficulty,
+        xp: xp,
       };
 
       const serverResponse = await saveGoalsToServer(payloadToServer);
@@ -334,48 +338,70 @@ const App = () => {
     }
   };
 
-  // Fetch goals with enhanced data processing
+  // Updated fetchGoals to ingest API data
   const fetchGoals = async () => {
     if (!userId) return;
     setLoading(true);
-    
+
     try {
-      const response = await fetch(`${BACKEND_URL}/goals/${userId}`);
-      let data = {};
-      
-      if (response.status !== 404) {
-        data = await response.json();
-      }
+      const response = await fetch(`${BACKEND_URL}/goals/${userId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-      const fetchedGoals = data.goals || {};
-      setGoals(fetchedGoals);
+      if (!response.ok) throw new Error("Failed to fetch goals");
 
-      // Process active goal data
-      if (fetchedGoals[activeGoal]) {
-        const goalData = fetchedGoals[activeGoal];
-        
-        // Process roadmap into phases
-        if (goalData.roadmap) {
-          const phases = Object.entries(goalData.roadmap).map(([key, phase], index) => ({
-            id: key,
-            title: typeof phase === 'string' ? `Phase ${index + 1}` : phase.title || `Phase ${index + 1}`,
-            description: typeof phase === 'string' ? phase : phase.description || phase,
-            duration: typeof phase === 'object' ? phase.duration || '1-2 weeks' : '1-2 weeks',
-            difficulty: typeof phase === 'object' ? phase.difficulty || index + 1 : index + 1,
-            projects: typeof phase === 'object' ? phase.projects || [] : [],
-            skills: typeof phase === 'object' ? phase.skills || [] : [],
-            icon: availableGoals.find(g => g.id === activeGoal)?.icon || '🎯'
-          }));
-          setRoadmapPhases(phases);
+      const data = await response.json();
+
+      // Normalize backend response
+      let fetchedGoals = {};
+      if (data.goals) {
+        fetchedGoals = data.goals;
+
+        // Set activeGoal to the first goal in the response, if available
+        const firstGoal = Object.keys(data.goals)[0];
+        if (firstGoal) {
+          setActiveGoal(firstGoal);
+          const goalData = data.goals[firstGoal];
+
+          // Set selectedLevel based on end_goal
+          setSelectedLevel(mapEndGoalToLevel(goalData.end_goal));
+
+          // Set difficulty and xp
+          setDifficulty(goalData.difficulty_level || 1);
+          setXp(goalData.xp || 0);
+
+          // Console log the four data points
+          console.log('Active Goal:', firstGoal);
+          console.log('Selected Level:', mapEndGoalToLevel(goalData.end_goal));
+          console.log('XP:', goalData.xp || 0);
+          console.log('Difficulty Level:', goalData.difficulty_level || 1);
+
+          // Process roadmap phases
+          if (goalData.roadmap) {
+            const phases = Object.entries(goalData.roadmap).map(([key, phase], index) => ({
+              id: key,
+              title: typeof phase === 'string' ? `Phase ${index + 1}` : phase.title || `Phase ${index + 1}`,
+              description: typeof phase === 'string' ? phase : phase.description || phase,
+              duration: typeof phase === 'object' ? phase.duration || '1-2 weeks' : '1-2 weeks',
+              difficulty: typeof phase === 'object' ? phase.difficulty || index + 1 : index + 1,
+              projects: typeof phase === 'object' ? phase.projects || [] : [],
+              skills: typeof phase === 'object' ? phase.skills || [] : [],
+              icon: availableGoals.find(g => g.id === firstGoal)?.icon || '🎯'
+            }));
+            setRoadmapPhases(phases);
+          } else {
+            setRoadmapPhases([]);
+          }
+        } else {
+          setRoadmapPhases([]);
+          setDifficulty(1);
+          setXp(0);
+          setSelectedLevel('beginner');
         }
-
-        setDifficulty(goalData.difficulty_level || 1);
-        setXp(goalData.xp || 0);
-      } else {
-        setRoadmapPhases([]);
-        setDifficulty(1);
-        setXp(0);
       }
+
+      setGoals(fetchedGoals);
 
     } catch (error) {
       console.error('Fetch failed:', error);
@@ -390,11 +416,17 @@ const App = () => {
     if (userId) {
       fetchGoals();
     }
-  }, [userId, activeGoal]);
+  }, [userId]);
 
   const handleGoalChange = (goalId) => {
     setActiveGoal(goalId);
     setLoading(true);
+    // Update selectedLevel, difficulty, and xp based on new goal
+    if (goals[goalId]) {
+      setSelectedLevel(mapEndGoalToLevel(goals[goalId].end_goal));
+      setDifficulty(goals[goalId].difficulty_level || 1);
+      setXp(goals[goalId].xp || 0);
+    }
   };
 
   if (!userId) {
@@ -440,8 +472,6 @@ const App = () => {
           </motion.p>
         </motion.section>
 
-        {/* Goal Selection */}
-         
         {/* Messages */}
         <AnimatePresence>
           {apiError && (
@@ -570,7 +600,6 @@ const App = () => {
                 <p className="text-zinc-300">Creating your personalized learning pipeline...</p>
               </div>
 
-              {/* Processing stages */}
               <div className="flex justify-center items-center gap-8 flex-wrap">
                 {['Analyzing Goals', 'Structuring Phases', 'Optimizing Path', 'Finalizing'].map((stage, index) => (
                   <motion.div
@@ -614,7 +643,6 @@ const App = () => {
                 animate={{ opacity: 1 }}
                 className="space-y-12"
               >
-                {/* Pipeline Overview */}
                 <div className="relative p-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
                   <motion.h3 
                     className="text-3xl font-bold mb-8 text-center flex items-center justify-center gap-2"
@@ -625,7 +653,7 @@ const App = () => {
                     Your Learning Pipeline
                   </motion.h3>
                   
-                  <div className="flex  justify-center items-center gap-16 flex-wrap py-8">
+                  <div className="flex justify-center items-center gap-16 flex-wrap py-8">
                     {roadmapPhases.map((phase, index) => (
                       <PipelineNode
                         key={phase.id}
@@ -639,7 +667,6 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* Detailed Phase Cards */}
                 <div className="grid gap-6">
                   <h3 className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
                     <BookOpen className="w-6 h-6 text-purple-400" />
@@ -657,7 +684,6 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* Enhanced Phase Focus View */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activePhaseIndex}
@@ -674,10 +700,10 @@ const App = () => {
                         {activePhaseIndex + 1}
                       </motion.div>
                       <div>
-                        <h3 className="text-3xl   font-bold text-white">
+                        <h3 className="text-3xl font-bold text-white">
                           {roadmapPhases[activePhaseIndex]?.title}
                         </h3>
-                        <p className="text-zinc-400 m-10 flex items-center gap-2">
+                        <p className="text-zinc-400 flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           {roadmapPhases[activePhaseIndex]?.duration}
                         </p>
@@ -688,7 +714,7 @@ const App = () => {
                       <div>
                         <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                           <Target className="w-5 h-5 text-green-400" />
-                          Description Hello
+                          Description
                         </h4>
                         <p className="text-zinc-300 leading-relaxed mb-6">
                           {roadmapPhases[activePhaseIndex]?.description}
@@ -762,7 +788,6 @@ const App = () => {
                       </div>
                     </div>
 
-                    {/* Navigation */}
                     <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/10">
                       <motion.button
                         onClick={() => setActivePhaseIndex(Math.max(0, activePhaseIndex - 1))}
@@ -809,7 +834,6 @@ const App = () => {
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Daily Tasks Section */}
                 {goals[activeGoal]?.daily_tasks && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -934,3 +958,4 @@ const App = () => {
 };
 
 export default App;
+ 
