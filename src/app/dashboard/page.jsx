@@ -624,6 +624,7 @@ export default function ExamAnalyticsDashboard() {
       // Clear local storage regardless of API response
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('email');
       
       // Redirect to login or refresh page
       window.location.href = '/login';
